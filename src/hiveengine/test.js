@@ -18,6 +18,7 @@ function testSomeMoves() {
     assert(b.whitePiecePool.pool.get(ANT) === 1, 'White ANTS not deducted from pool properly');
     assert(b.blackPiecePool.pool.get(ANT) === 2, 'Black ANTS not deducted from pool properly');
     assert(b.pieces.pieces.length === 6, 'PIECES array is the wrong length');
+    console.log(b.toString());
 }
 
 function assert(v, msg) {

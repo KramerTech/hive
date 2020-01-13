@@ -9,6 +9,15 @@ export const BLACK = 'black';
 export const WHITE = 'white';
 export const TIE = 'tie';
 export const TYPES = [ANT,GRASSHOPPER,SPIDER,BEETLE,BEE,LADYBUG,MOSQUITO];
+export const TypeToText = {
+    [ANT]: 'a',
+    [GRASSHOPPER]: 'g',
+    [SPIDER]: 's',
+    [BEETLE]: 'b',
+    [BEE]: 'B',
+    [LADYBUG]: 'l',
+    [MOSQUITO]: 'm',
+};
 
 export class Pieces {
     constructor() {

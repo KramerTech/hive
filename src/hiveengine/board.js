@@ -1,5 +1,5 @@
 import { HexGrid } from "./hexgrid";
-import { PiecePool, Pieces, BEE, TIE, Piece, WHITE, BLACK } from "./piece";
+import { PiecePool, Pieces, BEE, TIE, Piece, WHITE, BLACK, TypeToText } from "./piece";
 
 export class Board {
     constructor(w, h) {
@@ -96,6 +96,25 @@ export class Board {
         that.blackPiecePool = this.blackPiecePool.clone();
         that.whitePiecePool = this.whitePiecePool.clone();
         that.moveNumber = this.moveNumber;
+    }
+
+    toString() {
+        let str = [];
+        for (let i = 0; i < this.grid.height; i++) {
+            for (let j = 0; j < this.grid.height - i; j++) {
+                str.push(' ');
+            }
+            for (let j = 0; j < this.grid.width; j++) {
+                let topPiece = this.grid.getValue([j,i]).getTop();
+                if (topPiece) {
+                    str.push(topPiece.color[0] + TypeToText[topPiece.type]);
+                } else {
+                    str.push('. ');
+                }
+            }
+            str.push('\n');
+        }
+        return str.join('');
     }
 }
 
