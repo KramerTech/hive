@@ -21,7 +21,6 @@ export class Piece {
 		public player: number,
 		public bug: Bug,
 	) {
-		console.log(bug);
 	}
 
 	update(axial: Vec) {

@@ -63,8 +63,6 @@ export class Board {
 			} while (!pool.has(bug));
 			this.placePiece(pool.use(bug), pos.clone());
 		}
-
-		console.log(this.toString());
 	}
 
 	// private rotate(tile: Tile) {

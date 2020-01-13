@@ -35,7 +35,7 @@ export class Moves {
 		let valids;
 		if (move.src) {
 			// Disjoint graphs check
-			if (this.bridge(board, piece)) {
+			if (this.isBridge(board, piece)) {
 				console.log("THIS MOVE WOULD BREAK THE HIVE");
 				return false;	
 			}
@@ -75,6 +75,7 @@ export class Moves {
         const moves: Move[] = [];
 		board.forEachPiece(piece => {
 			if (piece.player !== board.currentPlayer) { return; }
+			if (this.isBridge(board, piece)) { return; }
 			const dests = (this as any)[piece.bug](board, piece) as Vec[];
 			moves.push(...dests.map(move => new Move(board.currentPlayer, piece.bug, move, piece.axial)));
 		});
@@ -92,7 +93,7 @@ export class Moves {
 	 * Returns true if the one-hive condition prevents this piece from moving
 	 * In other words, true if removing this node would create two disjoint graphs
 	 */
-	static bridge(board: Board, piece: Piece) {
+	static isBridge(board: Board, piece: Piece) {
 		if (piece.level > 0) {
 			return false;
 		}
