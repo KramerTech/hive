@@ -9,9 +9,11 @@ export class Draw {
 		tile: Piece,
 		g: CanvasRenderingContext2D,
 		hover: boolean,
+		top: boolean,
 	) {
 		// let type = tile.pieceType;
-		let scale = hover ? 0.7 : 0.55;
+		let scale = (hover && top) ? 0.7 : 0.55;
+
 		g.scale(scale, scale);
 
 		Polygon.draw(g, 6, true);

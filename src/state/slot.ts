@@ -46,7 +46,7 @@ export class Slot {
         return this.stack.pop();
     }
 
-    getLevel() {
+    size() {
         return this.stack.length;
     }
 

@@ -3,6 +3,7 @@ import { Vec } from "../vec";
 import { Bug } from "./pieceTypes";
 import { Game } from "../state/game";
 import { Piece } from "../state/piece";
+import { Slot } from "../state/slot";
 
 export class Move {
 	constructor(

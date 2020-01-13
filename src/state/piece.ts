@@ -32,9 +32,23 @@ export class Piece {
 	draw(g: CanvasRenderingContext2D) {
 		let color = Color.player[this.player];
 		
-		Polygon.draw(g, 6, false);
 		g.fillStyle = color;
-		g.fill();
+		g.strokeStyle = "black";
+		
+		if (this.level === 0) {
+			Polygon.draw(g, 6, false);
+			g.fill();
+		} else {
+			Polygon.forEachEdge(6, false, (vert, prev, i) => {
+				if (i % 2 === 0) { return; }
+				g.beginPath();
+				g.moveTo(prev.x, prev.y);
+				g.lineTo(0, 0);
+				g.lineTo(vert.x, vert.y);
+				g.fill();
+				g.stroke();
+			});
+		}
 
 		g.strokeStyle = "black";
 		g.fillStyle = "black";

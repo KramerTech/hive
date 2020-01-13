@@ -127,7 +127,6 @@ export class Board {
 
 	getSlot(axial: Vec): Slot {
 		const idx = this.offset + axial.x + axial.y * this.width;
-		console.log(idx);
 		if (idx < 0 || idx > this.grid.length) {
 			//TODO: enlarge grid?
 			console.log("BAD SLOT", axial);

@@ -1,8 +1,11 @@
 import { Util } from "../util";
+import { Vec } from "../vec";
 
 export class Var {
 
 	public static SECONDS_PER_TURN = 120;
+
+	public static STACK_OFF = Vec.mult(Util.HEX_UP, -0.16);
 
 	public static THIN_TILE_STROKE = 0.02;
 	public static BOLD_TILE_STROKE = 0.08;

@@ -3,6 +3,7 @@ import { Game } from "../state/game";
 import { Piece } from "../state/piece";
 import { Var } from "../state/var";
 import { Vec } from "../vec";
+import { Util } from "../util";
 import { Draw } from "./draw";
 import { Input } from "./input";
 
@@ -85,34 +86,35 @@ export class Graphics {
 
 		// Draw any piece that you're dragging on top of all the other pieces
 		if (Env.movingTile) {
-			g.translate(Input.moveDelta.x, Input.moveDelta.y);
 			this.drawTile(g, Env.movingTile);
 		}
 
 		g.restore();
 	}
 
-	private drawTile(g: CanvasRenderingContext2D, tile: Piece) {
+	private drawTile(g: CanvasRenderingContext2D, piece: Piece) {
+		const slot = this.game.board.getSlot(piece.axial);
+		if (piece.level !== slot.size() - 1) { return; }
 
 		g.save();
-		g.translate(tile.cart.x, tile.cart.y);
+		g.translate(piece.cart.x, piece.cart.y);
 		g.lineWidth = Var.PIECE_STROKE;
 
-		let hover = tile.drag || tile.axial.equals(Env.hex) && !Env.movingTile;
+		let hover = piece.drag || piece.axial.equals(Env.hex) && !Env.movingTile;
 
-		// if (active && this.game.currentPlayer === Env.myPlayer) {
-		// 	if (tile.drag || (tile.axial.equals(Env.hex) && !Env.movingTile)) {
-		// 		hover = true;
-		// 		if (tile.drag) {
-		// 			g.save();
-		// 			Draw.tile(tile, g, hover, active);
-		// 			g.restore();
-		// 		}
-		// 		g.translate(Input.moveDelta.x, Input.moveDelta.y);
-		// 	}
-		// }
-		tile.draw(g);
-		Draw.tile(tile, g, hover);
+		for (const piece of slot.stack) {
+			g.save();
+			if (piece === Env.movingTile) {
+				g.translate(Input.moveDelta.x, Input.moveDelta.y);
+			}
+			
+			piece.draw(g);
+			Draw.tile(piece, g, hover, piece.level === slot.size() - 1);
+			g.restore();
+
+			g.translate(Var.STACK_OFF.x, Var.STACK_OFF.y);
+		}
+
 		g.restore();
 	}
 
