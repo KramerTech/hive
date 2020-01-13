@@ -3,7 +3,6 @@ import { Vec } from "../vec";
 import { Bug } from "./pieceTypes";
 import { Piece } from "../state/piece";
 import { Slot } from "../state/slot";
-import { getBestMove } from "../ai/evaluator";
 
 export class Move {
 	constructor(

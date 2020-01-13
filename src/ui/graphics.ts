@@ -1,9 +1,8 @@
+import { Board } from "../state/board";
 import { Env } from "../state/env";
-import { Game } from "../state/game";
 import { Piece } from "../state/piece";
 import { Var } from "../state/var";
 import { Vec } from "../vec";
-import { Util } from "../util";
 import { Draw } from "./draw";
 import { Input } from "./input";
 
@@ -19,7 +18,7 @@ export class Graphics {
 	private boundTick = this.tick.bind(this);
 
 	constructor(
-		public game: Game
+		public board: Board
 	) {
 		window.addEventListener("resize", this.resize.bind(this));
 		document.addEventListener('contextmenu', e => e.preventDefault());
@@ -32,7 +31,7 @@ export class Graphics {
 	}
 
 	gameUpdated() {
-		this.size = new Vec(this.game.board.width, this.game.board.height);
+		this.size = new Vec(this.board.width, this.board.height);
 	}
 
 	tick() {
@@ -78,7 +77,7 @@ export class Graphics {
 		g.translate(Env.slide.x, Env.slide.y);
 		g.scale(Env.scale, Env.scale);
 
-		this.game.board.forEachPiece(tile => {
+		this.board.forEachPiece(tile => {
 			if (tile !== Env.movingTile) {
 				this.drawTile(g, tile);
 			}
@@ -93,14 +92,14 @@ export class Graphics {
 	}
 
 	private drawTile(g: CanvasRenderingContext2D, piece: Piece) {
-		const slot = this.game.board.getSlot(piece.axial);
+		const slot = this.board.getSlot(piece.axial);
 		if (piece.level !== slot.size() - 1) { return; }
 
 		g.save();
 		g.translate(piece.cart.x, piece.cart.y);
 		g.lineWidth = Var.PIECE_STROKE;
 
-		let hover = piece.drag || piece.axial.equals(Env.hex) && !Env.movingTile;
+		let hover = this.board.currentPlayer === piece.player && (piece.drag || piece.axial.equals(Env.hex) && !Env.movingTile);
 
 		for (const piece of slot.stack) {
 			g.save();

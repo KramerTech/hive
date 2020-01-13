@@ -1,7 +1,6 @@
 import { Piece } from "../state/piece";
-import { Util } from "../util";
-import { Polygon } from "./polygons";
 import { Color } from "./colors";
+import { Polygon } from "./polygons";
 
 export class Draw {
 
