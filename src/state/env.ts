@@ -11,6 +11,7 @@ export class Env {
 	public static gameStarted = false;
 
 	public static movingTile?: Piece;
+	public static pieceMoves?: Vec[];
 
 	public static hex = new Vec();
 	public static world = new Vec();

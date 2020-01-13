@@ -5,6 +5,8 @@ import { Var } from "../state/var";
 import { Vec } from "../vec";
 import { Draw } from "./draw";
 import { Input } from "./input";
+import { Polygon } from "./polygons";
+import { Util } from "../util";
 
 export class Graphics {
 
@@ -66,7 +68,6 @@ export class Graphics {
 		Env.slide.set(this.canvas.width / 2, this.canvas.height / 2).sub(Vec.div(this.size, 2).mult(Env.scale));
 	}
 
-
 	private draw(dt: number) {
 		this.clear();
 
@@ -83,12 +84,47 @@ export class Graphics {
 			}
 		});
 
+		this.drawValidMoves(g);
+
 		// Draw any piece that you're dragging on top of all the other pieces
 		if (Env.movingTile) {
 			this.drawTile(g, Env.movingTile);
 		}
 
 		g.restore();
+	}
+
+	private drawValidMoves(g: CanvasRenderingContext2D) {
+		if (!Env.pieceMoves) { return; }
+		Env.pieceMoves.forEach(pos => {
+			g.save();
+			g.translate(pos.x, pos.y);
+
+			g.strokeStyle = "#0094FF";
+			g.fillStyle = "#0094FF";
+			let circle = 0.04;
+	
+			g.lineWidth = Var.BOLD_TILE_STROKE;
+	
+			g.beginPath();
+			Polygon.forEachEdge(6, false, (vert, prev, idx) => {
+				if (idx === 0) { g.moveTo(prev.x, prev.y); }
+	
+				if (idx > 0) { g.stroke(); }
+	
+				g.beginPath();
+				g.ellipse(prev.x, prev.y, circle, circle, 0, 0, Util.PI2);
+				g.fill();
+				
+				g.beginPath();
+				g.moveTo(prev.x, prev.y);
+				
+				g.lineTo(vert.x, vert.y);
+			});
+	
+			g.stroke();
+			g.restore();
+		});
 	}
 
 	private drawTile(g: CanvasRenderingContext2D, piece: Piece) {

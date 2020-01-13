@@ -39,7 +39,7 @@ export class Moves {
 			}
 
 			// Find valid moves for the given bug type
-			valids = (this as any)[piece.bug](board, piece);
+			valids = this.getPieceMoves(board, piece);
 		} else {
 			// Or valid places we can put down a new piece
 			valids = this.placeable(board);
@@ -48,7 +48,7 @@ export class Moves {
 		if (this.moveValid(move, valids)) {
 			board.move(move);
 
-			const moves = this.getValidMoves(board);
+			const moves = this.getAllMoves(board);
 			console.log(moves.length, moves);
 
 			return true;
@@ -68,13 +68,16 @@ export class Moves {
 		return false;
 	}
 
+	static getPieceMoves(board: Board, piece: Piece): Vec[] {
+		return (this as any)[piece.bug](board, piece) as Vec[];
+	}
 	
-	static getValidMoves(board: Board): Move[] {
+	static getAllMoves(board: Board): Move[] {
         const moves: Move[] = [];
 		board.forEachPiece(piece => {
 			if (piece.player !== board.currentPlayer) { return; }
 			if (this.isBridge(board, piece)) { return; }
-			const dests = (this as any)[piece.bug](board, piece) as Vec[];
+			const dests = this.getPieceMoves(board, piece);
 			moves.push(...dests.map(move => new Move(board.currentPlayer, piece.bug, move, piece.axial)));
 		});
 		const dests = this.placeable(board) as Vec[];
@@ -281,7 +284,7 @@ export class Moves {
 			const check = board.get(pos);
 			if (check && !checked[check.bug]) {
 				checked[check.bug] = true;
-				const newMoves: Vec[] = (this as any)[check.bug](board, piece);
+				const newMoves: Vec[] = this.getPieceMoves(board, piece);
 				newMoves.forEach(m => moves.set(JSON.stringify(m), m))
 			}
 		});

@@ -3,6 +3,7 @@ import { Board } from "../state/board";
 import { Env } from "../state/env";
 import { Piece } from "../state/piece";
 import { Vec } from "../vec";
+import { Util } from "../util";
 
 export class Input {
 
@@ -95,7 +96,7 @@ export class Input {
 			return;
 		}
 		
-		let mine = tile && tile.player === board.currentPlayer;
+		let mine = tile && tile.player === this.board.currentPlayer;
 
 		// If all else has failed, buy a piece at the selected location
 		console.log("Buy Piece");
@@ -105,14 +106,18 @@ export class Input {
 	public reset() {
 		if (Env.movingTile) { Env.movingTile.drag = false; }
 		delete Env.movingTile;
+		delete Env.pieceMoves;
 		this.rightOn = false;
 		this.mouseDown = false;
 		Input.moveDelta.zero();
 	}
 
-	private dragTile(tile: Piece, right?: boolean) {
-		Env.movingTile = tile;
-		tile.drag = true;
+	private dragTile(piece: Piece, right?: boolean) {
+		Env.movingTile = piece;
+		if (!Moves.isBridge(this.board, piece)) {
+			Env.pieceMoves = Moves.getPieceMoves(this.board, piece).map(move => Util.axialToCartesian(move));
+		}
+		piece.drag = true;
 		if (right) { this.rightOn = true; }
 	}
 	
