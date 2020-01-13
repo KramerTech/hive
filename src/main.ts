@@ -1,12 +1,13 @@
-import { Game } from "./state/game";
 import { Graphics } from "./ui/graphics";
 import { Input } from "./ui/input";
+import { Board } from "./state/board";
+import { Rand } from "./random";
 
 export class Main {
 
 	public static controller = new Main();
 
-	public game!: Game;
+	public game!: Board;
 
 	// network: Network;
 
@@ -19,7 +20,9 @@ export class Main {
 	}
 
 	public newGame(players: number) {
-		this.game = new Game(players);
+		const seed = Math.floor(Math.random() * 1000000);
+		console.log(seed);
+		this.game = new Board(players, 26, 26, new Rand(seed));
 		this.setGame();
 	}
 
@@ -31,7 +34,7 @@ export class Main {
 	public setGame() {
 		if (this.graphics) {
 			this.graphics.game = this.game;
-			this.input.game = this.game;
+			this.input.board = this.game;
 		} else {
 			console.log("Initialized");
 			this.graphics = new Graphics(this.game);

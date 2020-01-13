@@ -1,7 +1,6 @@
 import { Board } from "../state/board";
 import { Vec } from "../vec";
 import { Bug } from "./pieceTypes";
-import { Game } from "../state/game";
 import { Piece } from "../state/piece";
 import { Slot } from "../state/slot";
 
@@ -16,8 +15,7 @@ export class Move {
 
 export class Moves {
 
-	static make(game: Game, move: Move): boolean {
-		const board = game.board;
+	static make(board: Board, move: Move): boolean {
 		if (move.player !== board.currentPlayer) { return false; }
 		
 		// Sanity check

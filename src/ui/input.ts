@@ -1,9 +1,8 @@
+import { Move, Moves } from "../mechanics/moves";
+import { Board } from "../state/board";
 import { Env } from "../state/env";
-import { Game } from "../state/game";
 import { Piece } from "../state/piece";
-import { Util } from "../util";
 import { Vec } from "../vec";
-import { Moves, Move } from "../mechanics/moves";
 
 export class Input {
 
@@ -18,7 +17,7 @@ export class Input {
 	private rightOn = false;
 
 	constructor(
-		public game: Game,
+		public board: Board,
 	) {
 		window.addEventListener("mousedown", this.down.bind(this));
 		window.addEventListener("mouseup", this.up.bind(this));
@@ -41,7 +40,7 @@ export class Input {
 	}
 
 	private up(event: MouseEvent) {
-		// let tile = this.game.board.get(Env.hex);
+		// let tile = this.board.get(Env.hex);
 		if (event.button === 0) {
 			if (!this.dragFlag) {
 				this.dragFlag = true;
@@ -74,11 +73,9 @@ export class Input {
 	}
 
 	private rightClick() {
-		const game = this.game;
-
 		if (Env.turnEnded) { return; }
 
-		let tile = this.game.board.getSlot(Env.hex).getTop();
+		let tile = this.board.getSlot(Env.hex).getTop();
 
 		this.rightOn = false;
 		Input.moveDelta.zero();
@@ -98,7 +95,7 @@ export class Input {
 			return;
 		}
 		
-		let mine = tile && tile.player === game.board.currentPlayer;
+		let mine = tile && tile.player === board.currentPlayer;
 
 		// If all else has failed, buy a piece at the selected location
 		console.log("Buy Piece");
@@ -121,15 +118,13 @@ export class Input {
 	
 	pickup(): boolean {
 		if (Env.turnEnded) { return false; }
-
-		let game = this.game;
-		let piece = game.board.getSlot(Env.hex).getTop();
+		let piece = this.board.getSlot(Env.hex).getTop();
 
 		if (Env.movingTile) {
 			return true;
 		}
 
-		if (!piece) { return false; }
+		if (!piece || piece.player !== this.board.currentPlayer) { return false; }
 
 		this.dragTile(piece as Piece);
 		return true;
@@ -140,7 +135,6 @@ export class Input {
 			return;
 		}
 		
-		let game = this.game;
 		let dest = Env.hex;
 		
 		// Do a buy move if we created a new piece out in the void
@@ -156,7 +150,7 @@ export class Input {
 			dest,
 			Env.movingTile.axial,
 		);
-		Moves.make(game, move);
+		Moves.make(this.board, move);
 	} finally {
 		this.reset();
 	}}
