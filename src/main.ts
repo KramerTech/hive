@@ -1,5 +1,7 @@
 import { Graphics } from "./ui/graphics";
 import { Input } from "./ui/input";
+import { Moves } from "./mechanics/moves";
+import { getBestMove } from "./ai/evaluator";
 import { Board } from "./state/board";
 import { Rand } from "./random";
 
@@ -24,6 +26,12 @@ export class Main {
 		console.log(seed);
 		this.game = new Board(players, 26, 26, new Rand(seed));
 		this.setGame();
+		setInterval(() => {
+			console.log('moving');
+			let move = getBestMove(this.game, 3);
+			console.log(move);
+			Moves.make(this.game, move);
+		}, 5000)
 	}
 
 	public nextTurn() {

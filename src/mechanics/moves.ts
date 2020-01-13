@@ -14,7 +14,6 @@ export class Move {
 }
 
 export class Moves {
-
 	static make(board: Board, move: Move): boolean {
 		if (move.player !== board.currentPlayer) { return false; }
 		
@@ -47,9 +46,9 @@ export class Moves {
 
 		if (this.moveValid(move, valids)) {
 			board.move(move);
-
-			const moves = this.getAllMoves(board);
-			console.log(moves.length, moves);
+			
+			//const moves = this.getAllMoves(board);
+			//console.log(moves.length, moves);
 
 			return true;
 		}
@@ -72,19 +71,22 @@ export class Moves {
 		return (this as any)[piece.bug](board, piece) as Vec[];
 	}
 	
-	static getAllMoves(board: Board): Move[] {
+	static getAllMoves(board: Board, player?: number): Move[] {
+		if (typeof player === undefined) {
+			player = board.currentPlayer;
+		}
         const moves: Move[] = [];
 		board.forEachPiece(piece => {
-			if (piece.player !== board.currentPlayer) { return; }
+			if (piece.player !== player) { return; }
 			if (this.isBridge(board, piece)) { return; }
 			const dests = this.getPieceMoves(board, piece);
-			moves.push(...dests.map(move => new Move(board.currentPlayer, piece.bug, move, piece.axial)));
+			moves.push(...dests.map(move => new Move(player || 0, piece.bug, move, piece.axial)));
 		});
 		const dests = this.placeable(board) as Vec[];
 
 		// TODO: Bee check
 		for (const bug of board.currentPool().bugs()) {
-			moves.push(...dests.map(move => new Move(board.currentPlayer, bug, move)));
+			moves.push(...dests.map(move => new Move(player || 0, bug, move)));
 		}
 
 		return moves;
