@@ -1,6 +1,25 @@
 import { Piece } from "./piece";
+import { Vec } from "../vec";
 
 export class Slot {
+
+	public static ORDER = [
+		new Vec(1, -1),
+		new Vec(1, 0),
+		new Vec(0, 1),
+		new Vec(-1, 1),
+		new Vec(-1, 0),
+		new Vec(0, -1),
+	];
+
+	static forSurrounding(pos: Vec, cb: (pos: Vec, idx: number, dir: Vec) => boolean | void) {
+		let i = 0;
+		for (let v of Slot.ORDER) {
+			if (cb(new Vec(pos.x + v.x, pos.y + v.y), i++, v.clone())) {
+				return;
+			}
+		}
+	}
 
 	public stack: Piece[] = [];
 

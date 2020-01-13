@@ -4,6 +4,7 @@ import { Util } from "../util";
 import { Vec } from "../vec";
 import { Var } from "./var";
 import { Bug } from "../mechanics/pieceTypes";
+import { Slot } from "./slot";
 
 export class Piece {
 
@@ -73,22 +74,8 @@ export class Piece {
 
 	}
 
-	public static ORDER = [
-		new Vec(1, -1),
-		new Vec(1, 0),
-		new Vec(0, 1),
-		new Vec(-1, 1),
-		new Vec(-1, 0),
-		new Vec(0, -1),
-	];
-
 	forSurrounding(cb: (pos: Vec, idx: number, dir: Vec) => boolean | void) {
-		let i = 0;
-		for (let v of Piece.ORDER) {
-			if (cb(new Vec(this.axial.x + v.x, this.axial.y + v.y), i++, v.clone())) {
-				return;
-			}
-		}
+		Slot.forSurrounding(this.axial, cb);
 	}
 
 	equals(other: Piece) {
