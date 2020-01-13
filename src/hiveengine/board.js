@@ -21,13 +21,24 @@ export class Board {
 
     executeMove(move) {
         if (move.start) {
-            this.grid.getValue(move.start).popPiece();
+            let p = this.grid.getValue(move.start).popPiece();
+            this.pieces.removePiece(this.pieces.getPieceIdx(p.pos, p.level));
         } else {
-            this.piecePool.use(move.type);
+            if (this.whosTurn() === BLACK) {
+                this.blackPiecePool.use(move.type);
+            } else {
+                this.whitePiecePool.use(move.type);
+            }
         }
         let slot = this.grid.getValue(move.end);
-        slot.pushPiece(new Piece(move.type, move.end, slot.getLevel()));
+        let newPiece = new Piece(move.type, move.end, slot.getLevel(), this.whosTurn());
+        this.pieces.addPiece(newPiece)
+        slot.pushPiece(newPiece);
         this.moveNumber++;
+    }
+
+    whosTurn() {
+        return this.moveNumber % 2 === 0 ? WHITE : BLACK;
     }
 
     checkWin() {
