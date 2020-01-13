@@ -49,7 +49,7 @@ export class Board {
 			lastDir = dirNum;
 
 			// Get the axial vec of the chosen direction
-			let dir = Piece.ORDER[dirNum];
+			let dir = Slot.ORDER[dirNum];
 
 			// Keep going in that direction until there's an empty space
 			do { pos.add(dir); }
@@ -78,26 +78,6 @@ export class Board {
 	public forEachPiece(cb: (tile: Piece, i: number) => void) {
 		this.pieces.forEach(cb);
 	}
-
-	// private zeroSortAndSet(min: Vec) {
-	// 	let array = this.pieces;
-	// 	this.grid = [];
-	// 	this.pieces = [];
-
-	// 	min = Vec.sub(min, new Vec(1, 1));		
-	// 	let hexOff = Util.cartesianToAxial(min);
-	// 	let cartOff = Util.axialToCartesian(hexOff);
-
-	// 	array.forEach(tile => {
-	// 		tile.axial.sub(hexOff);
-	// 		tile.cart.sub(cartOff);
-	// 		this.set(tile.axial, tile);
-	// 	});
-
-	// 	this.pieces.sort((a, b) => {
-	// 		return b.cart.x - a.cart.x || b.cart.y - a.cart.y;
-	// 	});
-	// }
 
     getPiecesByType(bug: Bug, player: number) {
         let pieces = [];

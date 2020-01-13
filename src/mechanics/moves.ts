@@ -118,8 +118,8 @@ export class Moves {
 		const moves: Vec[] = [];
 		piece.forSurrounding((pos, i) => {
 			if (board.get(pos)) { return; }
-			const back = Vec.add(piece.axial, Piece.ORDER[(i + 5) % 6]);
-			const forth = Vec.add(piece.axial, Piece.ORDER[(i + 1) % 6]);
+			const back = Vec.add(piece.axial, Slot.ORDER[(i + 5) % 6]);
+			const forth = Vec.add(piece.axial, Slot.ORDER[(i + 1) % 6]);
 			let count = 0;
 			if (board.get(back)) { count++; }
 			if (board.get(forth)) { count++; }
@@ -188,8 +188,8 @@ export class Moves {
 				return;
 			}
 			
-			const back = Vec.add(piece.axial, Piece.ORDER[(i + 5) % 6]);
-			const forth = Vec.add(piece.axial, Piece.ORDER[(i + 1) % 6]);
+			const back = Vec.add(piece.axial, Slot.ORDER[(i + 5) % 6]);
+			const forth = Vec.add(piece.axial, Slot.ORDER[(i + 1) % 6]);
 			let count = 0;
 			if (board.get(back)) { count++; }
 			if (board.get(forth)) { count++; }
