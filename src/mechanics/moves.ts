@@ -283,7 +283,7 @@ export class Moves {
 			const check = board.get(pos);
 			if (check && !checked[check.bug]) {
 				checked[check.bug] = true;
-				const newMoves: Vec[] = this.getPieceMoves(board, check, piece.bug);
+				const newMoves: Vec[] = this.getPieceMoves(board, piece, check.bug);
 				newMoves.forEach(m => moves.set(JSON.stringify(m), m))
 			}
 		});
