@@ -1,6 +1,6 @@
 import { Env } from "../state/env";
 import { Game } from "../state/game";
-import { Tile } from "../state/tile";
+import { Piece } from "../state/piece";
 import { Var } from "../state/var";
 import { Vec } from "../vec";
 import { Draw } from "./draw";
@@ -31,7 +31,7 @@ export class Graphics {
 	}
 
 	gameUpdated() {
-		this.size = this.game.board.size();
+		this.size = new Vec(this.game.board.width, this.game.board.height);
 	}
 
 	tick() {
@@ -77,7 +77,7 @@ export class Graphics {
 		g.translate(Env.slide.x, Env.slide.y);
 		g.scale(Env.scale, Env.scale);
 
-		this.game.board.forEachTile(tile => {
+		this.game.board.forEachPiece(tile => {
 			if (tile !== Env.movingTile) {
 				this.drawTile(g, tile);
 			}
@@ -92,13 +92,12 @@ export class Graphics {
 		g.restore();
 	}
 
-	private drawTile(g: CanvasRenderingContext2D, tile: Tile) {
+	private drawTile(g: CanvasRenderingContext2D, tile: Piece) {
 
 		g.save();
 		g.translate(tile.cart.x, tile.cart.y);
 		g.lineWidth = Var.PIECE_STROKE;
 
-		let active = tile.player === this.game.currentPlayer;
 		let hover = tile.drag || tile.axial.equals(Env.hex) && !Env.movingTile;
 
 		// if (active && this.game.currentPlayer === Env.myPlayer) {

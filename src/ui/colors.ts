@@ -56,13 +56,13 @@ export class Color {
 
 }
 
-Color.bugs[Bug.B] = "#DBB600";
+Color.bugs[Bug.Q] = "#DBB600";
 Color.bugs[Bug.A] = "#0078D9";
-Color.bugs[Bug.H] = "#007F0E";
+Color.bugs[Bug.G] = "#007F0E";
 Color.bugs[Bug.L] = "#FF0000";
 Color.bugs[Bug.M] = "#A0A0A0";
 Color.bugs[Bug.S] = "#5E3C33";
-Color.bugs[Bug.T] = "#B200FF";
+Color.bugs[Bug.B] = "#B200FF";
 
 // for (let p of Color.player) {
 // 	p.selected = new Color(p.main).lighten(p.light).hex;;

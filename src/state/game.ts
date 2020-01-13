@@ -3,8 +3,6 @@ import { Rand } from "../random";
 
 export class Game {
 
-	public turn = 0;
-	public currentPlayer = 0;
 	public board: Board;
 	private rand: Rand;
 
@@ -13,13 +11,11 @@ export class Game {
 		public seed = Math.random() * 1000000,
 	) {
 		this.rand = new Rand(seed);
-		this.board = new Board(players, this.rand);
+		this.board = new Board(players, 20, 20, this.rand);
 	}
 
 	nextTurn() {
-		this.turn++;
-		this.currentPlayer++;
-		this.currentPlayer %= this.players;
+		this.board.nextTurn();
 	}
 	
 }

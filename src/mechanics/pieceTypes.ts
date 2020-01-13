@@ -1,11 +1,11 @@
 export enum Bug {
-	B = "bee",
+	Q = "queen",
 	A = "ant",
-	H = "hopper",
+	G = "hopper",
 	S = "spider",
-	T = "beetle",
+	B = "beetle",
 	L = "lady",
-	M = "mosqito"
+	M = "mosquito"
 }
 
 export const Bugs: Bug[] = [];

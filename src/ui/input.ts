@@ -1,6 +1,6 @@
 import { Env } from "../state/env";
 import { Game } from "../state/game";
-import { Tile } from "../state/tile";
+import { Piece } from "../state/piece";
 import { Util } from "../util";
 import { Vec } from "../vec";
 import { Moves, Move } from "../mechanics/moves";
@@ -78,7 +78,7 @@ export class Input {
 
 		if (Env.turnEnded) { return; }
 
-		let tile = this.game.board.get(Env.hex);
+		let tile = this.game.board.getSlot(Env.hex).getTop();
 
 		this.rightOn = false;
 		Input.moveDelta.zero();
@@ -91,13 +91,14 @@ export class Input {
 
 		// Right clicking the void creates a temporary piece to be placed down
 		if (!tile) {
-			Tile.NEW_PIECE.axial = Env.hex.clone();
-			Tile.NEW_PIECE.cart = Util.axialToCartesian(Env.hex);
-			this.dragTile(Tile.NEW_PIECE, true);
+			// TODO: pull from appropriate pool
+			// Piece.NEW_PIECE.axial = Env.hex.clone();
+			// Piece.NEW_PIECE.cart = Util.axialToCartesian(Env.hex);
+			// this.dragTile(Piece.NEW_PIECE, true);
 			return;
 		}
 		
-		let mine = tile && tile.player === game.currentPlayer;
+		let mine = tile && tile.player === game.board.currentPlayer;
 
 		// If all else has failed, buy a piece at the selected location
 		console.log("Buy Piece");
@@ -112,7 +113,7 @@ export class Input {
 		Input.moveDelta.zero();
 	}
 
-	private dragTile(tile: Tile, right?: boolean) {
+	private dragTile(tile: Piece, right?: boolean) {
 		Env.movingTile = tile;
 		tile.drag = true;
 		if (right) { this.rightOn = true; }
@@ -122,15 +123,15 @@ export class Input {
 		if (Env.turnEnded) { return false; }
 
 		let game = this.game;
-		let tile = game.board.get(Env.hex);
+		let piece = game.board.getSlot(Env.hex).getTop();
 
 		if (Env.movingTile) {
 			return true;
 		}
 
-		if (!tile) { return false; }
+		if (!piece) { return false; }
 
-		this.dragTile(tile as Tile);
+		this.dragTile(piece as Piece);
 		return true;
 	}
 
@@ -150,7 +151,7 @@ export class Input {
 		// }
 
 		const move = new Move(
-			game.currentPlayer,
+			game.board.currentPlayer,
 			Env.movingTile.bug,
 			dest,
 			Env.movingTile.axial,

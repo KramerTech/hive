@@ -3,31 +3,29 @@ import { Polygon } from "../ui/polygons";
 import { Util } from "../util";
 import { Vec } from "../vec";
 import { Var } from "./var";
-import { Bugs } from "../mechanics/pieceTypes";
+import { Bug } from "../mechanics/pieceTypes";
 
-export class Tile {
-
-	public static FAKE = new Tile(Vec.ZERO, 0);
-	public static NEW_PIECE = new Tile(Vec.ZERO, 0);
+export class Piece {
 
 	public cart!: Vec;
+	public axial!: Vec;
+	
 	public hover = false;
 	public drag = false;
 
+	public index!: number;
+
 	constructor(
-		public axial: Vec,
 		public player: number,
-		public bug = Bugs[Math.floor(Bugs.length * Math.random())],
+		public bug: Bug,
 	) {
 		console.log(bug);
-		this.update(this.axial);
 	}
 
 	update(axial: Vec) {
 		this.axial = axial;
 		this.cart = Util.axialToCartesian(axial);
 	}
-
 
 	draw(g: CanvasRenderingContext2D) {
 		let color = Color.player[this.player];
@@ -83,21 +81,22 @@ export class Tile {
 		new Vec(0, -1),
 	];
 
-	forSurrounding(cb: (pos: Vec, idx: number) => boolean | void) {
+	forSurrounding(cb: (pos: Vec, idx: number, dir: Vec) => boolean | void) {
 		let i = 0;
-		for (let v of Tile.ORDER) {
-			if (cb(new Vec(this.axial.x + v.x, this.axial.y + v.y), i++)) {
+		for (let v of Piece.ORDER) {
+			if (cb(new Vec(this.axial.x + v.x, this.axial.y + v.y), i++, v.clone())) {
 				return;
 			}
 		}
 	}
 
-	equals(other: Tile) {
+	equals(other: Piece) {
 		return this.axial.equals(other.axial);
 	}
 
 	clone() {
-		let tile = new Tile(this.axial, this.player, this.bug);
+		let tile = new Piece(this.player, this.bug);
+		tile.axial = this.axial;
 		tile.cart = this.cart;
 		return tile;
 	}
