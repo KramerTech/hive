@@ -1,21 +1,25 @@
 import { Slot } from "./slot";
 
-// 3 ant, 3 grasshopper
-// 2 beetle, 2 spidey
-// 1 bee, ladybug, mosquito
-
 export class HexGrid {
-    constructor(w, h) {
-        this.width = w;
-        this.height = h;
+
+	public grid: Slot[];
+
+	constructor(
+		public width: number,
+		public height: number,	
+	) {
         this.grid = new Array(this.width*this.height).fill(1).map(() => new Slot());
     }
 
-    getValue([x, y]) {
+	private idx(axial: Vec): number {
+		return axial.x + axial.y * this.width;
+	}
+
+    get(axial: Vec): Tile | undefined {
         return this.grid[x + y*this.width];
     }
 
-    setValue([x, y], value) {
+    set([x, y], value) {
         this.grid[x + y*this.width] = value;
     }
 
@@ -66,8 +70,10 @@ export class HexGrid {
     }
 
     clone() {
-        let that = new HexGrid(this.width, this.height);
+        const grid = new HexGrid(this.width, this.height);
         that.grid = this.grid.map(x => x.clone());
         return that;
     }
+
+
 }

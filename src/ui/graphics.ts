@@ -1,6 +1,6 @@
 import { Env } from "../state/env";
 import { Game } from "../state/game";
-import { Tile } from "../state/tile";
+import { Piece } from "../state/piece";
 import { Var } from "../state/var";
 import { Vec } from "../vec";
 import { Draw } from "./draw";
@@ -92,7 +92,7 @@ export class Graphics {
 		g.restore();
 	}
 
-	private drawTile(g: CanvasRenderingContext2D, tile: Tile) {
+	private drawTile(g: CanvasRenderingContext2D, tile: Piece) {
 
 		g.save();
 		g.translate(tile.cart.x, tile.cart.y);

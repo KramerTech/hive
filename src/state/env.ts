@@ -1,6 +1,6 @@
 import { Vec } from "../vec";
 import { Util } from "../util";
-import { Tile } from "./tile";
+import { Piece } from "./piece";
 import { Var } from "./var";
 
 export class Env {
@@ -10,7 +10,7 @@ export class Env {
 	public static turnRotation = 0;
 	public static gameStarted = false;
 
-	public static movingTile?: Tile;
+	public static movingTile?: Piece;
 
 	public static hex = new Vec();
 	public static world = new Vec();

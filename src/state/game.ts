@@ -3,8 +3,6 @@ import { Rand } from "../random";
 
 export class Game {
 
-	public turn = 0;
-	public currentPlayer = 0;
 	public board: Board;
 	private rand: Rand;
 
@@ -14,12 +12,14 @@ export class Game {
 	) {
 		this.rand = new Rand(seed);
 		this.board = new Board(players, this.rand);
+
+		for (let i = 0; i < players; i++) {
+			this.pools.push(new PiecePool(player));
+		}
 	}
 
 	nextTurn() {
-		this.turn++;
-		this.currentPlayer++;
-		this.currentPlayer %= this.players;
+		this.board.nextTurn();
 	}
 	
 }

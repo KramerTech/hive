@@ -1,26 +1,26 @@
 import { Util } from "../util";
 import { Vec } from "../vec";
-import { Tile } from "./tile";
+import { Piece } from "./piece";
 import { Rand } from "../random";
+import { HexGrid } from "./hex";
+import { Bug } from "../mechanics/pieceTypes";
 
 export class Board {
 
-	private grid: Tile[][] = [];
-	private flat: Tile[] = [];
+	public turn = 0;
+	public currentPlayer = 0;
+
+	private grid: HexGrid;
+	private pieces: Piece[] = [];
 
 	constructor(
 		public players: number,
-		rand?: Rand,
-		grid?: Board,
+		public w: number,
+		public h: number,
+		public rand: Rand,
+		grid?: HexGrid,
 	) {
-		if (grid) {
-			for (let tile of grid.flat) {
-				this.set(tile.axial, tile.clone());
-			}
-			return;
-		} else if (!rand) {
-			return;
-		}
+		this.grid = new HexGrid(w, h);
 
 		let pos = new Vec();
 		let min = new Vec(1000, 1000);
@@ -36,14 +36,14 @@ export class Board {
 			lastDir = dirNum;
 
 			// Get the axial vec of the chosen direction
-			let dir = Tile.ORDER[dirNum];
+			let dir = Piece.ORDER[dirNum];
 
 			// Keep going in that direction until there's an empty space
 			do { pos.add(dir); }
 			while (this.get(pos));
 
 			// Fill that empty space
-			let tile = new Tile(pos.clone(), i % players);
+			let tile = new Piece(pos.clone(), i % players);
 			this.set(pos, tile);
 			min.min(tile.cart);
 		}
@@ -59,14 +59,14 @@ export class Board {
 	// 	}
 	// }
 
-	public forEachTile(cb: (tile: Tile, i: number) => void) {
-		this.flat.forEach(cb);
+	public forEachTile(cb: (tile: Piece, i: number) => void) {
+		this.pieces.forEach(cb);
 	}
 
 	private zeroSortAndSet(min: Vec) {
-		let array = this.flat;
+		let array = this.pieces;
 		this.grid = [];
-		this.flat = [];
+		this.pieces = [];
 
 		min = Vec.sub(min, new Vec(1, 1));		
 		let hexOff = Util.cartesianToAxial(min);
@@ -78,56 +78,110 @@ export class Board {
 			this.set(tile.axial, tile);
 		});
 
-		this.flat.sort((a, b) => {
+		this.pieces.sort((a, b) => {
 			return b.cart.x - a.cart.x || b.cart.y - a.cart.y;
 		});
 	}
 
+	getByIdx(idx) {
+        return this.pieces[idx];
+    }
 
-	size(): Vec {
-		let max = this.flat[0].cart.clone();
-		for (let tile of this.flat) {
-			let c = tile.cart;
-			max.max(c);
-		}
-		return max.add(Util.axialToCartesian(new Vec(1, 1)));
-	}
+    getPieceIdx([x, y], level) {
+        for (let i = 0; i < this.pieces.length; i++) {
+            let p = this.pieces[i];
+            if (p.pos.x === x && p.pos.y === y && p.level === level) {
+                return i;
+            }
+        }
+    }
 
-	get(axial: Vec | undefined): Tile | undefined {
-		if (!axial) { return undefined; }
-		if (!this.grid[axial.x]) { return; }
-		return this.grid[axial.x][axial.y];
-	}
-
-	set(axial: Vec, tile: Tile | undefined) {
-		if (tile) {
-			if (!this.grid[axial.x]) { this.grid[axial.x] = []; }
-			let existing = this.grid[axial.x][axial.y];
-			if (existing) {
-				this.flat[this.flat.indexOf(existing)] = tile;;
-			} else {
-				this.flat.push(tile);
-			}
-			this.grid[axial.x][axial.y] = tile;
-		} else if (this.grid[axial.x]) {
-			let tile = this.grid[axial.x][axial.y];
-			if (tile) { this.flat.splice(this.flat.indexOf(tile)); }
-			this.grid[axial.x][axial.y];
-			if (!this.grid[axial.x].length) {
-				delete this.grid[axial.x];
+    getPiecesByType(bug: Bug, player: number) {
+        let pieces = [];
+        for (const piece of this.pieces) {
+			if (piece.bug === bug && piece.player === player) {
+				pieces.push(piece);
 			}
 		}
+        return pieces;
+    }
+
+    removePiece(idx) {
+        return this.pieces.splice(idx, 1);
+    }
+
+    addPiece(piece: Piece) {
+        this.pieces.push(piece);
+	}
+	
+
+
+	// size(): Vec {
+	// 	let max = this.pieces[0].cart.clone();
+	// 	for (let tile of this.pieces) {
+	// 		let c = tile.cart;
+	// 		max.max(c);
+	// 	}
+	// 	return max.add(Util.axialToCartesian(new Vec(1, 1)));
+	// }
+
+	// get(axial: Vec | undefined): Piece | undefined {
+	// 	if (!axial) { return undefined; }
+	// 	if (!this.grid[axial.x]) { return; }
+	// 	return this.grid[axial.x][axial.y];
+	// }
+
+	// set(axial: Vec, tile: Piece | undefined) {
+	// 	if (tile) {
+	// 		if (!this.grid[axial.x]) { this.grid[axial.x] = []; }
+	// 		let existing = this.grid[axial.x][axial.y];
+	// 		if (existing) {
+	// 			this.pieces[this.pieces.indexOf(existing)] = tile;;
+	// 		} else {
+	// 			this.pieces.push(tile);
+	// 		}
+	// 		this.grid[axial.x][axial.y] = tile;
+	// 		// tile.update(axial);
+	// 	} else if (this.grid[axial.x]) {
+	// 		let tile = this.grid[axial.x][axial.y];
+	// 		if (tile) { this.pieces.splice(this.pieces.indexOf(tile)); }
+	// 		this.grid[axial.x][axial.y];
+	// 		if (!this.grid[axial.x].length) {
+	// 			delete this.grid[axial.x];
+	// 		}
+	// 	}
+	// }
+
+	// clone(offset?: number): Board {
+	// 	let clone = new Board(this.players, undefined, this);
+	// 	if (offset) {
+	// 		clone.pieces.forEach(t => {
+	// 			t.player += offset;
+	// 			t.player %= this.players;
+	// 		});
+	// 	}
+	// 	return clone;
+	// }
+
+	nextTurn() {
+		this.turn++;
+		this.currentPlayer++;
+		this.currentPlayer %= this.players;
 	}
 
-	clone(offset?: number): Board {
-		let clone = new Board(this.players, undefined, this);
-		if (offset) {
-			clone.flat.forEach(t => {
-				t.player += offset;
-				t.player %= this.players;
-			});
-		}
-		return clone;
-	}
+    clone() {
+		const grid = this.grid.clone();
+        const board = new Board(
+			this.players,
+			this.grid.width,
+			this.grid.height,
+			this.rand,
+			grid,
+		);
+		board.pieces = this.pieces.slice(0);
+        that.blackPiecePool = this.blackPiecePool.clone();
+        that.whitePiecePool = this.whitePiecePool.clone();
+        that.moveNumber = this.moveNumber;
+    }
 
 }

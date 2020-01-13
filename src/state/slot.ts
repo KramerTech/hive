@@ -1,7 +1,10 @@
+import { Piece } from "./piece";
+
 export class Slot {
-    constructor() {
-        this.stack = [];
-    }
+
+	public stack: Piece[] = [];
+
+    constructor() {}
 
     hasPiece() {
         return this.stack.length > 0;
@@ -15,7 +18,7 @@ export class Slot {
         return this.stack[0];
     }
 
-    pushPiece(piece) {
+    pushPiece(piece: Piece) {
         this.stack.push(piece);
     }
 
@@ -28,8 +31,10 @@ export class Slot {
     }
 
     clone() {
-        let that = new Slot();
-        that.stack = this.stack.slice(0);
-        return that;
+		const slot = new Slot();
+		for (const piece of this.stack) {
+			slot.stack.push(piece);
+		}
+        return slot;
     }
 }

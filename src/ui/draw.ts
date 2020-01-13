@@ -1,4 +1,4 @@
-import { Tile } from "../state/tile";
+import { Piece } from "../state/piece";
 import { Util } from "../util";
 import { Polygon } from "./polygons";
 import { Color } from "./colors";
@@ -6,7 +6,7 @@ import { Color } from "./colors";
 export class Draw {
 
 	static tile(
-		tile: Tile,
+		tile: Piece,
 		g: CanvasRenderingContext2D,
 		hover: boolean,
 	) {
