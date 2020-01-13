@@ -8,6 +8,8 @@ import { Move } from "../mechanics/moves";
 
 export class Board {
 
+	public offset: number;
+
 	public turn = 0;
 	public currentPlayer = 0;
 
@@ -22,7 +24,10 @@ export class Board {
 		public rand: Rand,
 		clone?: boolean,
 	) {
+		this.offset = Math.floor(this.height / 2) * this.width + Math.floor(this.width / 2);
 		if (clone) { return; }
+
+		(window as any)["board"] = this;
 
 		this.grid = new Array(this.width * this.height).fill(1).map(() => new Slot());
 
@@ -58,6 +63,8 @@ export class Board {
 			} while (!pool.has(bug));
 			this.placePiece(pool.use(bug), pos.clone());
 		}
+
+		console.log(this.toString());
 	}
 
 	// private rotate(tile: Tile) {
@@ -134,11 +141,13 @@ export class Board {
 	// }
 
 	get(axial: Vec): Piece | undefined {
-		return this.getSlot(axial).getTop();
+		const slot = this.getSlot(axial);
+		if (slot) { return slot.getTop(); }
 	}
 
 	getSlot(axial: Vec): Slot {
-		const idx = this.height * this.width / 2 + axial.x + axial.y * this.width;
+		const idx = this.offset + axial.x + axial.y * this.width;
+		console.log(idx);
 		if (idx < 0 || idx > this.grid.length) {
 			//TODO: enlarge grid?
 			console.log("BAD SLOT", axial);
@@ -146,38 +155,6 @@ export class Board {
 		}
 		return this.grid[idx];
 	}
-
-	// set(axial: Vec, tile: Piece | undefined) {
-	// 	if (tile) {
-	// 		if (!this.grid[axial.x]) { this.grid[axial.x] = []; }
-	// 		let existing = this.grid[axial.x][axial.y];
-	// 		if (existing) {
-	// 			this.pieces[this.pieces.indexOf(existing)] = tile;;
-	// 		} else {
-	// 			this.pieces.push(tile);
-	// 		}
-	// 		this.grid[axial.x][axial.y] = tile;
-	// 		// tile.update(axial);
-	// 	} else if (this.grid[axial.x]) {
-	// 		let tile = this.grid[axial.x][axial.y];
-	// 		if (tile) { this.pieces.splice(this.pieces.indexOf(tile)); }
-	// 		this.grid[axial.x][axial.y];
-	// 		if (!this.grid[axial.x].length) {
-	// 			delete this.grid[axial.x];
-	// 		}
-	// 	}
-	// }
-
-	// clone(offset?: number): Board {
-	// 	let clone = new Board(this.players, undefined, this);
-	// 	if (offset) {
-	// 		clone.pieces.forEach(t => {
-	// 			t.player += offset;
-	// 			t.player %= this.players;
-	// 		});
-	// 	}
-	// 	return clone;
-	// }
 
 	nextTurn() {
 		this.turn++;
@@ -215,12 +192,12 @@ export class Board {
 	
 	toString() {
         let str = [];
-        for (let i = 0; i < this.height; i++) {
+        for (let i = this.height - 1; i >= 0; i--) {
             for (let j = 0; j < this.height - i; j++) {
                 str.push(' ');
             }
             for (let j = 0; j < this.width; j++) {
-                let topPiece = (this.getSlot(new Vec(j, i)) as Slot).getTop();
+                let topPiece = this.grid[j + this.width * i].getTop();
                 if (topPiece) {
                     str.push(topPiece.player + topPiece.bug[0]);
                 } else {

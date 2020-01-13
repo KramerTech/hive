@@ -18,28 +18,19 @@ export class Draw {
 		g.fillStyle = Color.bugs[tile.bug];
 		g.fill();
 
-		// Polygon.draw(g, type + 2, true);
-		// g.strokeStyle = "black";
-		// g.stroke();
+		// g.font = "bold .55px arial";
 
-		// g.rotate(Math.PI);
-		// tile.draw(g);
+		// g.textAlign = "center";
+		// g.textBaseline = "middle";
 
-		g.font = "bold .55px arial";
+		// g.shadowColor = "black";
+		// g.shadowOffsetX = 0;
+		// g.shadowOffsetY = 0
+		// g.shadowBlur = 4;
 
-		g.textAlign = "center";
-		g.textBaseline = "middle";
-
-		g.shadowColor = "black";
-		g.shadowOffsetX = 0;
-		g.shadowOffsetY = 0
-		g.shadowBlur = 4;
-
-		Draw.drawStat(g, "X: " + tile.axial.x, true);
-		g.rotate(Util.degToRad(60));
-		Draw.drawStat(g, "Y: " + tile.axial.y);
-		// g.rotate(Util.degToRad(-120));
-		// Draw.drawStat(g, tData.upkeep + " 🛠");
+		// Draw.drawStat(g, "X: " + tile.axial.x, true);
+		// g.rotate(Util.degToRad(60));
+		// Draw.drawStat(g, "Y: " + tile.axial.y);
 	}
 
 	static drawStat(g: CanvasRenderingContext2D, stat: string, top?: boolean) {

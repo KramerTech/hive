@@ -19,6 +19,7 @@ export class Slot {
     }
 
     pushPiece(piece: Piece) {
+		piece.level = this.stack.length;
         this.stack.push(piece);
     }
 

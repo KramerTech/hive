@@ -55,6 +55,8 @@ export class Moves {
 	}
 
 	static moveValid(move: Move, valids: Vec[]): boolean {
+		if (move.bug !== Bug.L) { return true; }
+
 		for (const valid of valids) {
 			if (valid.equals(move.dest)) {
 				return true;
@@ -114,11 +116,35 @@ export class Moves {
 
 	static queen(board: Board, piece: Piece): Vec[] {
 		const moves: Vec[] = [];
+		piece.forSurrounding((pos, i) => {
+			if (board.get(pos)) { return; }
+			const back = Vec.add(piece.axial, Piece.ORDER[(i + 5) % 6]);
+			const forth = Vec.add(piece.axial, Piece.ORDER[(i + 1) % 6]);
+			let count = 0;
+			if (board.get(back)) { count++; }
+			if (board.get(forth)) { count++; }
+			if (count === 1) {
+				moves.push(pos);
+			}
+		});
 		return moves;
 	}
 
 	static lady(board: Board, piece: Piece): Vec[] {
 		const moves: Vec[] = [];
+		piece.forSurrounding(pos => {
+			const p1 = board.get(pos);
+			if (!p1) { return; }
+			p1.forSurrounding(pos2 => {
+				const p2 = board.get(pos2);
+				if (!p2 || p2 === piece) { return; }
+				p2.forSurrounding(pos3 => {
+					if (!board.get(pos3)) {
+						moves.push(pos3);
+					}
+				})
+			});
+		})	
 		return moves;
 	}
 
@@ -156,6 +182,21 @@ export class Moves {
 
 	static beetle(board: Board, piece: Piece): Vec[] {
 		const moves: Vec[] = [];
+		piece.forSurrounding((pos, i) => {
+			if (piece.level > 0 || board.get(pos)) {
+				moves.push(pos);
+				return;
+			}
+			
+			const back = Vec.add(piece.axial, Piece.ORDER[(i + 5) % 6]);
+			const forth = Vec.add(piece.axial, Piece.ORDER[(i + 1) % 6]);
+			let count = 0;
+			if (board.get(back)) { count++; }
+			if (board.get(forth)) { count++; }
+			if (count === 1) {
+				moves.push(pos);
+			}
+		});
 		return moves;
 	}
 

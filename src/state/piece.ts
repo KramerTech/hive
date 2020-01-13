@@ -9,6 +9,7 @@ export class Piece {
 
 	public cart!: Vec;
 	public axial!: Vec;
+	public level = 0;
 	
 	public hover = false;
 	public drag = false;
