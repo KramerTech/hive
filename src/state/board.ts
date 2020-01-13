@@ -109,6 +109,7 @@ export class Board {
 				this.flat.push(tile);
 			}
 			this.grid[axial.x][axial.y] = tile;
+			// tile.update(axial);
 		} else if (this.grid[axial.x]) {
 			let tile = this.grid[axial.x][axial.y];
 			if (tile) { this.flat.splice(this.flat.indexOf(tile)); }

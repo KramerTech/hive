@@ -10,7 +10,7 @@ export class Tile {
 	public static FAKE = new Tile(Vec.ZERO, 0);
 	public static NEW_PIECE = new Tile(Vec.ZERO, 0);
 
-	public cart: Vec;
+	public cart!: Vec;
 	public hover = false;
 	public drag = false;
 
@@ -20,8 +20,14 @@ export class Tile {
 		public bug = Bugs[Math.floor(Bugs.length * Math.random())],
 	) {
 		console.log(bug);
+		this.update(this.axial);
+	}
+
+	update(axial: Vec) {
+		this.axial = axial;
 		this.cart = Util.axialToCartesian(axial);
 	}
+
 
 	draw(g: CanvasRenderingContext2D) {
 		let color = Color.player[this.player];

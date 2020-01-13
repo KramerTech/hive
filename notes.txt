@@ -1,3 +1,0 @@
-Village destroyed, new spawns in top-left
-
-Territory joined - capital stays in bigger territory. if equal, moves to bottom-right

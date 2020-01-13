@@ -3,6 +3,7 @@ import { Game } from "../state/game";
 import { Tile } from "../state/tile";
 import { Util } from "../util";
 import { Vec } from "../vec";
+import { Moves, Move } from "../mechanics/moves";
 
 export class Input {
 
@@ -135,25 +136,28 @@ export class Input {
 
 	private release() { try {
 		if (!Env.movingTile) {
-			this.reset();
 			return;
 		}
 		
 		let game = this.game;
-		let dest = game.board.get(Env.hex);
+		let dest = Env.hex;
 		
 		// Do a buy move if we created a new piece out in the void
-		if (Env.movingTile === Tile.NEW_PIECE) {
-			// (deleting the origin turns it into a buy)
-			Env.movingTile.drag = false;
-			delete Env.movingTile;
-		}
+		// if (Env.movingTile === Tile.NEW_PIECE) {
+		// 	// (deleting the origin turns it into a buy)
+		// 	Env.movingTile.drag = false;
+		// 	delete Env.movingTile;
+		// }
 
-		if (dest && dest !== Env.movingTile) {
-			// Move.make(game, Env.movingTile, dest, comp);
-		}
+		const move = new Move(
+			game.currentPlayer,
+			Env.movingTile.bug,
+			dest,
+			Env.movingTile.axial,
+		);
+		Moves.make(game, move);
 	} finally {
 		this.reset();
-	} }
+	}}
 
 }
