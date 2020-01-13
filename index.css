@@ -1,0 +1,56 @@
+body, html {
+	width: 100vw;
+	height: 100vh;
+	overflow: hidden;
+	margin: 0;
+	background-color: black;
+}
+
+canvas {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100vw !important;
+	height: 100vh !important;
+}
+
+.info-box {
+	pointer-events: none;
+	position: absolute;
+	top: 0; 
+	color: white;
+	background-color: rgba(0, 0, 0, 0.7);
+	padding: 10px;
+	text-align: center;
+	font-family: monospace;
+}
+
+#info {
+	right: 0;
+	border-radius: 0 0 0 10px;
+}
+
+#upkeep {
+	left: 0;
+	border-radius: 0 0 10px 0;
+}
+
+#upkeep table tr td:last-child {
+	text-align: right;
+}
+
+#upkeep table {
+	text-align: left;
+}
+
+#splotch {
+	/* background-color: red; */
+	margin: auto;
+	width: 60%;
+	padding-top: 60%;
+}
+
+#timer {
+	font-family: 'Courier New', Courier, monospace;
+	font-size: 1.4em;
+}

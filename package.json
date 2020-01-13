@@ -1,0 +1,22 @@
+{
+	"name": "hexagoons",
+	"browserslist": [
+		"last 2 Chrome versions"
+	],
+	"scripts": {
+		"start": "concurrently --kill-others \"parcel watch index.html --no-hmr\" \"reload -b -d dist\"",
+		"build": "rm -fr www && mkdir www && parcel build --no-source-maps -d www index.html",
+		"deps": "npm i && npm i -g concurrently parcel-bundler reload",
+		"server": "ts-node-dev server/server.ts"
+	},
+	"devDependencies": {
+		"@types/node": "^10.12.18",
+		"@types/ws": "^6.0.1",
+		"cssnano": "^4.1.10",
+		"typescript": "^3.2.4"
+	},
+	"dependencies": {
+		"pure-rand": "^1.6.2",
+		"ws": "^7.0.0"
+	}
+}
