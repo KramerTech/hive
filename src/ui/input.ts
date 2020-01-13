@@ -1,7 +1,6 @@
 import { Env } from "../state/env";
 import { Game } from "../state/game";
 import { Piece } from "../state/piece";
-import { Util } from "../util";
 import { Vec } from "../vec";
 import { Moves, Move } from "../mechanics/moves";
 
@@ -156,7 +155,7 @@ export class Input {
 			dest,
 			Env.movingTile.axial,
 		);
-		Moves.make(game, move);
+		Moves.make(game.board, move);
 	} finally {
 		this.reset();
 	}}

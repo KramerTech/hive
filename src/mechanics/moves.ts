@@ -1,9 +1,9 @@
 import { Board } from "../state/board";
 import { Vec } from "../vec";
 import { Bug } from "./pieceTypes";
-import { Game } from "../state/game";
 import { Piece } from "../state/piece";
 import { Slot } from "../state/slot";
+import { getBestMove } from "../ai/evaluator";
 
 export class Move {
 	constructor(
@@ -15,9 +15,7 @@ export class Move {
 }
 
 export class Moves {
-
-	static make(game: Game, move: Move): boolean {
-		const board = game.board;
+	static make(board: Board, move: Move): boolean {
 		if (move.player !== board.currentPlayer) { return false; }
 		
 		// Sanity check
@@ -49,9 +47,8 @@ export class Moves {
 
 		if (this.moveValid(move, valids)) {
 			board.move(move);
-
-			const moves = this.getValidMoves(board);
-			console.log(moves.length, moves);
+			//const moves = this.getValidMoves(board);
+			//console.log(moves.length, moves);
 
 			return true;
 		}
@@ -71,19 +68,22 @@ export class Moves {
 	}
 
 	
-	static getValidMoves(board: Board): Move[] {
+	static getValidMoves(board: Board, player?: number): Move[] {
+		if (typeof player === undefined) {
+			player = board.currentPlayer;
+		}
         const moves: Move[] = [];
 		board.forEachPiece(piece => {
-			if (piece.player !== board.currentPlayer) { return; }
+			if (piece.player !== player) { return; }
 			if (this.isBridge(board, piece)) { return; }
 			const dests = (this as any)[piece.bug](board, piece) as Vec[];
-			moves.push(...dests.map(move => new Move(board.currentPlayer, piece.bug, move, piece.axial)));
+			moves.push(...dests.map(move => new Move(player || 0, piece.bug, move, piece.axial)));
 		});
 		const dests = this.placeable(board) as Vec[];
 
 		// TODO: Bee check
 		for (const bug of board.currentPool().bugs()) {
-			moves.push(...dests.map(move => new Move(board.currentPlayer, bug, move)));
+			moves.push(...dests.map(move => new Move(player || 0, bug, move)));
 		}
 
 		return moves;

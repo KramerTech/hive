@@ -10,7 +10,7 @@ export class Game {
 		public players = 2,
 		public seed = Math.floor(Math.random() * 1000000),
 	) {
-		seed = 709559;
+		seed = 310509;
 		console.log(seed);
 		this.rand = new Rand(seed);
 		this.board = new Board(players, 20, 20, this.rand);
