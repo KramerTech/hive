@@ -56,7 +56,7 @@ export class Moves {
 	}
 
 	static moveValid(move: Move, valids: Vec[]): boolean {
-		if (move.bug !== Bug.A) { return true; }
+		if (move.bug !== Bug.S) { return true; }
 
 		for (const valid of valids) {
 			if (valid.equals(move.dest)) {
@@ -151,6 +151,35 @@ export class Moves {
 
 	static spider(board: Board, piece: Piece): Vec[] {
 		const moves: Vec[] = [];
+		const prevMoves: Set<string> = new Set<string>();
+		prevMoves.add(JSON.stringify(piece.axial));
+		const active: any[] = [{d: 0, p: piece.axial}];
+		while (active.length > 0) {
+			const curAct = active.pop();
+			const curPos = curAct.p;
+			const curMoves: Vec[] = [];
+			Slot.forSurrounding(curPos, (pos, i) => {
+				if (board.get(pos)) { return; }
+				const back = Vec.add(curPos, Slot.ORDER[(i + 5) % 6]);
+				const forth = Vec.add(curPos, Slot.ORDER[(i + 1) % 6]);
+				let count = 0;
+				if (board.get(back) && !back.equals(piece.axial)) { count++ }
+				if (board.get(forth) && !forth.equals(piece.axial)) { count++ }
+				if (count === 1) {
+					curMoves.push(pos);
+				}
+			});
+			curMoves.forEach((move: Vec) => {
+				if (!prevMoves.has(JSON.stringify(move))) {
+					prevMoves.add(JSON.stringify(move));
+					if (curAct.d === 2) {
+						moves.push(move);
+					} else {
+						active.push({d: curAct.d+1, p: move});
+					}
+				}
+			});
+		}
 		return moves;
 	}
 
@@ -159,11 +188,9 @@ export class Moves {
 		const prevMoves: Set<string> = new Set<string>();
 		prevMoves.add(JSON.stringify(piece.axial));
 		const active: Vec[] = [piece.axial];
-		let count = 0;
-		while (active.length > 0 && count < 1000) {
+		while (active.length > 0) {
 			const curPos = active.pop() as Vec;
 			const curMoves: Vec[] = [];
-			count++;
 			Slot.forSurrounding(curPos, (pos, i) => {
 				if (board.get(pos)) { return; }
 				const back = Vec.add(curPos, Slot.ORDER[(i + 5) % 6]);
