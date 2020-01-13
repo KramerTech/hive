@@ -3,6 +3,7 @@ import { Vec } from "../vec";
 import { Bug } from "./pieceTypes";
 import { Game } from "../state/game";
 import { Piece } from "../state/piece";
+import { Slot } from "../state/slot";
 
 export class Move {
 	constructor(
@@ -55,7 +56,7 @@ export class Moves {
 	}
 
 	static moveValid(move: Move, valids: Vec[]): boolean {
-		if (move.bug !== Bug.L) { return true; }
+		if (move.bug !== Bug.A) { return true; }
 
 		for (const valid of valids) {
 			if (valid.equals(move.dest)) {
@@ -155,6 +156,33 @@ export class Moves {
 
 	static ant(board: Board, piece: Piece): Vec[] {
 		const moves: Vec[] = [];
+		const prevMoves: Set<string> = new Set<string>();
+		prevMoves.add(JSON.stringify(piece.axial));
+		const active: Vec[] = [piece.axial];
+		let count = 0;
+		while (active.length > 0 && count < 1000) {
+			const curPos = active.pop() as Vec;
+			const curMoves: Vec[] = [];
+			count++;
+			Slot.forSurrounding(curPos, (pos, i) => {
+				if (board.get(pos)) { return; }
+				const back = Vec.add(curPos, Slot.ORDER[(i + 5) % 6]);
+				const forth = Vec.add(curPos, Slot.ORDER[(i + 1) % 6]);
+				let count = 0;
+				if (board.get(back) && !back.equals(piece.axial)) { count++ }
+				if (board.get(forth) && !forth.equals(piece.axial)) { count++ }
+				if (count === 1) {
+					curMoves.push(pos);
+				}
+			});
+			curMoves.forEach((move: Vec) => {
+				if (!prevMoves.has(JSON.stringify(move))) {
+					prevMoves.add(JSON.stringify(move));
+					moves.push(move);
+					active.push(move);
+				}
+			});
+		}
 		return moves;
 	}
 
