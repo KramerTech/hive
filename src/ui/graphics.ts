@@ -11,7 +11,6 @@ import { Util } from "../util";
 export class Graphics {
 
 	private size!: Vec;
-	private lastScale: number = Env.scale;
 
 	private g!: CanvasRenderingContext2D;
 	private canvas!: HTMLCanvasElement;

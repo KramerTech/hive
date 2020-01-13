@@ -53,7 +53,7 @@ export class Slot {
     clone() {
 		const slot = new Slot();
 		for (const piece of this.stack) {
-			slot.stack.push(piece);
+			slot.stack.push(piece.clone());
 		}
         return slot;
     }

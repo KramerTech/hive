@@ -96,10 +96,9 @@ export class Piece {
 	}
 
 	clone() {
-		let tile = new Piece(this.player, this.bug);
-		tile.axial = this.axial;
-		tile.cart = this.cart;
-		return tile;
+		let piece = new Piece(this.player, this.bug);
+		piece.axial = this.axial;
+		return piece;
 	}
 
 }

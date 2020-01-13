@@ -67,26 +67,23 @@ export class Moves {
 		return false;
 	}
 
-	static getPieceMoves(board: Board, piece: Piece): Vec[] {
-		return (this as any)[piece.bug](board, piece) as Vec[];
+	static getPieceMoves(board: Board, piece: Piece, bug: Bug = piece.bug): Vec[] {
+		return (this as any)[bug](board, piece) as Vec[];
 	}
 	
-	static getAllMoves(board: Board, player?: number): Move[] {
-		if (typeof player === undefined) {
-			player = board.currentPlayer;
-		}
+	static getAllMoves(board: Board, player = board.currentPlayer): Move[] {
         const moves: Move[] = [];
 		board.forEachPiece(piece => {
 			if (piece.player !== player) { return; }
 			if (this.isBridge(board, piece)) { return; }
 			const dests = this.getPieceMoves(board, piece);
-			moves.push(...dests.map(move => new Move(player || 0, piece.bug, move, piece.axial)));
+			moves.push(...dests.map(move => new Move(player, piece.bug, move, piece.axial)));
 		});
 		const dests = this.placeable(board) as Vec[];
 
 		// TODO: Bee check
 		for (const bug of board.currentPool().bugs()) {
-			moves.push(...dests.map(move => new Move(player || 0, bug, move)));
+			moves.push(...dests.map(move => new Move(player, bug, move)));
 		}
 
 		return moves;
@@ -286,7 +283,7 @@ export class Moves {
 			const check = board.get(pos);
 			if (check && !checked[check.bug]) {
 				checked[check.bug] = true;
-				const newMoves: Vec[] = this.getPieceMoves(board, piece);
+				const newMoves: Vec[] = this.getPieceMoves(board, check, piece.bug);
 				newMoves.forEach(m => moves.set(JSON.stringify(m), m))
 			}
 		});

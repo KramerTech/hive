@@ -38,7 +38,7 @@ export class Board {
 		// RANDOM BOARD FOR TESTING
 
 		let pos = new Vec();
-		let size = rand.next(5, 11);
+		let size = rand.next(2, 5);
 		size *= players;
 
 		let lastDir = 0;
@@ -98,10 +98,11 @@ export class Board {
 		let piece: Piece;
 		if (move.src) {
 			piece = this.getSlot(move.src).popPiece() as Piece;
+			this.getSlot(move.dest).pushPiece(piece);
 		} else {
 			piece = this.currentPool().use(move.bug);
+			this.placePiece(piece, move.dest);
 		}
-		this.getSlot(move.dest).pushPiece(piece);
 		piece.update(move.dest);
 
 		//TODO: check if we moved next to a queen, and if so, is that queen surrounded?

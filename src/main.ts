@@ -22,16 +22,16 @@ export class Main {
 	}
 
 	public newGame(players: number) {
-		const seed = Math.floor(Math.random() * 1000000);
+		const seed = 445201;//Math.floor(Math.random() * 1000000);
 		console.log(seed);
 		this.game = new Board(players, 26, 26, new Rand(seed));
 		this.setGame();
-		setInterval(() => {
-			console.log('moving');
-			let move = getBestMove(this.game, 3);
+
+		(window as any)["ai"] = (depth: number) => {
+			let move = getBestMove(this.game, depth);
 			console.log(move);
 			Moves.make(this.game, move);
-		}, 5000)
+		}
 	}
 
 	public nextTurn() {
@@ -41,7 +41,7 @@ export class Main {
 	
 	public setGame() {
 		if (this.graphics) {
-			this.graphics.game = this.game;
+			this.graphics.board = this.game;
 			this.input.board = this.game;
 		} else {
 			console.log("Initialized");
