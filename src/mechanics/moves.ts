@@ -56,7 +56,7 @@ export class Moves {
 	}
 
 	static moveValid(move: Move, valids: Vec[]): boolean {
-		if (move.bug !== Bug.S) { return true; }
+		//if (move.bug !== Bug.S) { return true; }
 
 		for (const valid of valids) {
 			if (valid.equals(move.dest)) {
@@ -132,7 +132,7 @@ export class Moves {
 	}
 
 	static lady(board: Board, piece: Piece): Vec[] {
-		const moves: Vec[] = [];
+		const moves: Map<string, Vec> = new Map<string, Vec>();
 		piece.forSurrounding(pos => {
 			const p1 = board.get(pos);
 			if (!p1) { return; }
@@ -141,12 +141,12 @@ export class Moves {
 				if (!p2 || p2 === piece) { return; }
 				p2.forSurrounding(pos3 => {
 					if (!board.get(pos3)) {
-						moves.push(pos3);
+						moves.set(JSON.stringify(pos3), pos3);
 					}
 				})
 			});
 		})	
-		return moves;
+		return Array.from(moves.values());
 	}
 
 	static spider(board: Board, piece: Piece): Vec[] {
@@ -214,7 +214,7 @@ export class Moves {
 	}
 
 	static mosquito(board: Board, piece: Piece): Vec[] {
-		const moves: Vec[] = [];
+		const moves: Map<string, Vec> = new Map();
 		const checked: {[key: string]: boolean} = {};
 
 		// Mark mosquito as already checked so we don't get into an infinte loop
@@ -226,13 +226,13 @@ export class Moves {
 			if (check && !checked[check.bug]) {
 				checked[check.bug] = true;
 				const newMoves: Vec[] = (this as any)[check.bug](board, piece);
-				moves.push(...newMoves);
+				newMoves.forEach(m => moves.set(JSON.stringify(m), m))
 			}
 		});
 
 		// TODO: prune duplicates for when we explore all paths
 
-		return moves;
+		return Array.from(moves.values());
 	}
 
 	static beetle(board: Board, piece: Piece): Vec[] {
