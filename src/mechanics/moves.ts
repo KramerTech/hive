@@ -17,8 +17,8 @@ export class Move {
 export class Moves {
 
 	static make(game: Game, move: Move): boolean {
-		// if (move.player !== game.currentPlayer) { return false; }
 		const board = game.board;
+		if (move.player !== board.currentPlayer) { return false; }
 		
 		// Sanity check
 		let piece: Piece | undefined;
@@ -35,7 +35,7 @@ export class Moves {
 		let valids;
 		if (move.src) {
 			// Disjoint graphs check
-			if (this.allThroughMe(board, piece)) {
+			if (this.bridge(board, piece)) {
 				console.log("THIS MOVE WOULD BREAK THE HIVE");
 				return false;	
 			}
@@ -49,6 +49,10 @@ export class Moves {
 
 		if (this.moveValid(move, valids)) {
 			board.move(move);
+
+			const moves = this.getValidMoves(board);
+			console.log(moves.length, moves);
+
 			return true;
 		}
 
@@ -56,7 +60,7 @@ export class Moves {
 	}
 
 	static moveValid(move: Move, valids: Vec[]): boolean {
-		if (move.bug !== Bug.S) { return true; }
+		// return true;
 
 		for (const valid of valids) {
 			if (valid.equals(move.dest)) {
@@ -66,21 +70,57 @@ export class Moves {
 		return false;
 	}
 
-	static getValidMoves(board: Board): Vec[] {
-        const moves: Vec[] = [];
+	
+	static getValidMoves(board: Board): Move[] {
+        const moves: Move[] = [];
 		board.forEachPiece(piece => {
-			moves.push(...(this as any)[piece.bug](board, piece));
+			if (piece.player !== board.currentPlayer) { return; }
+			const dests = (this as any)[piece.bug](board, piece) as Vec[];
+			moves.push(...dests.map(move => new Move(board.currentPlayer, piece.bug, move, piece.axial)));
 		});
-		moves.push(...this.placeable(board));
-		return moves;
-    }
+		const dests = this.placeable(board) as Vec[];
 
+		// TODO: Bee check
+		for (const bug of board.currentPool().bugs()) {
+			moves.push(...dests.map(move => new Move(board.currentPlayer, bug, move)));
+		}
+
+		return moves;
+	}
+	
 	/**
 	 * Returns true if the one-hive condition prevents this piece from moving
 	 * In other words, true if removing this node would create two disjoint graphs
 	 */
-	static allThroughMe(board: Board, piece: Piece) {
-		return false;
+	static bridge(board: Board, piece: Piece) {
+		if (piece.level > 0) {
+			return false;
+		}
+
+		const findNext = (idx: number, hasTile: boolean) => {
+			for (let i = idx; i < idx+6; i++) {
+				const test = Vec.add(piece.axial, Slot.ORDER[i % 6]);
+				if (!!board.get(test) === hasTile) {
+					return i % 6;
+				}
+			}
+			return -1;
+		}
+
+		const firstEmpty = findNext(0, false);
+		if (firstEmpty === -1) {
+			return false;
+		}
+
+		const nextFilled = findNext(firstEmpty + 1, true);
+		const nextEmpty = findNext(nextFilled + 1, false);
+		const finalFilled = findNext(nextEmpty + 1, true);
+		if (finalFilled === nextFilled) {
+			return false;
+		}
+
+		return true;
+
 	}
 
 	/**
@@ -89,9 +129,26 @@ export class Moves {
 	 * but no tiles of the opponents' colors
 	 */
 	static placeable(board: Board): Vec[] {
-		const moves: Vec[] = [];
+		const moves: Map<string, Vec> = new Map();
 
-		return moves;
+		board.forEachPiece(p => {
+			if (p.player === board.currentPlayer) {
+				p.forSurrounding(pos => {
+					if (board.get(pos)) { return; }
+					let flag = false;
+					Slot.forSurrounding(pos, bordering => {
+						let bp = board.get(bordering)
+						if (bp && bp.player !== board.currentPlayer) {
+							flag = true;
+						}
+					});
+					if (!flag) {
+						moves.set(JSON.stringify(pos), pos);
+					}
+				});
+			}
+		});
+		return Array.from(moves.values());
 	}
 
 	/**

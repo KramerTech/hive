@@ -151,7 +151,7 @@ export class Input {
 		// }
 
 		const move = new Move(
-			game.board.currentPlayer,
+			Env.movingTile.player,
 			Env.movingTile.bug,
 			dest,
 			Env.movingTile.axial,

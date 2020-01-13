@@ -194,4 +194,8 @@ export class Vec {
 	isZero(): boolean { return this.x === 0 && this.y === 0; }
 	eitherIsZero(): boolean { return this.x === 0 || this.y === 0; }
 
+	toString(): string {
+		return this.x + " " + this.y;
+	}
+
 }

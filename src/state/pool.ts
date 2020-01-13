@@ -39,7 +39,17 @@ export class PiecePool {
 
     use(bug: Bug): Piece {
 		return this.pools[bug].shift() as Piece;
-    }
+	}
+	
+	bugs(): Bug[] {
+		const bugs: Bug[] = [];
+		for (const bug in this.pools) {
+			if (this.pools[bug].length > 0) {
+				bugs.push(bug as Bug);
+			}
+		}
+		return bugs;
+	}
 
     clone() {
         return new PiecePool(this.player, this.pools);
