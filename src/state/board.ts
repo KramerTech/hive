@@ -15,7 +15,11 @@ export class Board {
 
 	private grid: Slot[] = [];
 	private pieces: Piece[] = [];
+	
 	public pools: PiecePool[] = [];
+	public bees: {[player: number]: Piece} = {};
+
+	private time = 0;
 
 	constructor(
 		public players: number,
@@ -62,6 +66,7 @@ export class Board {
 				bug = Bugs[rand.next(Bugs.length)];
 			} while (!pool.has(bug));
 			this.placePiece(pool.use(bug), pos.clone());
+			this.turn++;
 		}
 
 		this.findArticulationPoints();
@@ -80,38 +85,44 @@ export class Board {
 	}
 
 	findArticulationPoints() {
+		if (!this.pieces.length) { return; }
 		this.pieces.forEach(p => {
 			p.artPoint = false;
 			p.visited = false;
-			delete p.parent;
+			p.tin = -1;
+			p.low = -1;
 		});
-		this.articulationDFS(this.pieces[0], 0);
+
+		this.time = 0;
+		// We need to make sure we get the top piece as the root
+		const root = this.get(this.pieces[0].axial) as Piece;
+		this.articulationDFS(root);
 	}
 
 	// Based on https://en.wikipedia.org/wiki/Biconnected_component
-	articulationDFS(piece: Piece, depth: number) {
+	articulationDFS(piece: Piece, parent?: Piece) {
 		piece.visited = true;
-		piece.depth = depth;
-		piece.low = depth;
+		piece.tin = this.time++;
+		piece.low = piece.tin;
 
 		let children = 0;
-		let articulation = false;
 
 		piece.forSurrounding(pos => {
 			const check = this.get(pos);
-			if (!check) { return; }
-			if (!check.visited) {
-				children++;
-				check.parent = piece;
-				this.articulationDFS(check, depth + 1);
-				articulation = articulation || check.low > piece.depth;
+			if (!check || check === parent) { return; }
+			if (check.visited) {
+				piece.low = Math.min(piece.low, check.tin);
+			} else {
+				this.articulationDFS(check, piece);
 				piece.low = Math.min(piece.low, check.low);
-			} else if (piece.parent !== check) {
-				piece.low = Math.min(piece.low, check.depth);
+				if (check.low >= piece.tin && parent) {
+					piece.artPoint = true;
+				}
+				children++;
 			}
 		});
 
-		if (piece.parent && articulation || !piece.parent && children > 1) {
+		if (!parent && children > 1) {
 			piece.artPoint = true;
 		}
 	}
@@ -130,6 +141,9 @@ export class Board {
 		this.pieces.push(piece);
 		piece.update(dest);
 		this.getSlot(dest).pushPiece(piece);
+		if (piece.bug === Bug.Q) {
+			this.bees[piece.player] = piece;
+		}
 	}
 
 	move(move: Move) {
@@ -137,11 +151,11 @@ export class Board {
 		if (move.src) {
 			piece = this.getSlot(move.src).popPiece() as Piece;
 			this.getSlot(move.dest).pushPiece(piece);
+			piece.update(move.dest);
 		} else {
 			piece = this.currentPool().use(move.bug);
 			this.placePiece(piece, move.dest);
 		}
-		piece.update(move.dest);
 
 		//TODO: check if we moved next to a queen, and if so, is that queen surrounded?
 
@@ -187,9 +201,13 @@ export class Board {
 		board.currentPlayer = this.currentPlayer;
 
 		for (const slot of this.grid) {
-			board.grid.push(slot.clone());
-			if (slot.stack.length) {
-				board.pieces.push(...slot.stack);
+			const clone = slot.clone();
+			board.grid.push(clone);
+			for (const piece of clone.stack) {
+				board.pieces.push(piece);
+				if (piece.bug === Bug.Q) {
+					this.bees[piece.player] = piece;
+				}
 			}
 		}
 

@@ -22,7 +22,8 @@ export class Main {
 	}
 
 	public newGame(players: number) {
-		const seed = Math.floor(Math.random() * 1000000);
+		// const seed = Math.floor(Math.random() * 1000000);
+		const seed = 522696;
 		console.log(seed);
 		this.game = new Board(players, 26, 26, new Rand(seed));
 		this.setGame();
@@ -32,6 +33,10 @@ export class Main {
 			console.log(move);
 			Moves.make(this.game, move);
 		}
+
+		// for (let i = 0; i < 10; i++) {
+		// 	(window as any).ai(2);
+		// }
 	}
 
 	public nextTurn() {

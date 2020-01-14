@@ -33,7 +33,8 @@ export class Moves {
 		let valids;
 		if (move.src) {
 			// Disjoint graphs check
-			if (Env.validate && piece.artPoint) {
+			// Can safely be ignored if moving a stacked piece
+			if (piece.level === 0 && Env.validate && piece.artPoint) {
 				console.log("THIS MOVE WOULD BREAK THE HIVE");
 				return false;	
 			}
@@ -67,28 +68,31 @@ export class Moves {
 	}
 
 	static getPieceMoves(board: Board, piece: Piece, bug: Bug = piece.bug): Vec[] {
+		if (!board.bees[piece.player]) return [];
 		return (this as any)[bug](board, piece) as Vec[];
 	}
 	
 	static getAllMoves(board: Board, player = board.currentPlayer): Move[] {
 		const moves: Move[] = [];
-		if (Math.floor(board.turn / 2) === 3 && board.currentPool().has(Bug.Q)) {
-			const dests = this.placeable(board);
-			moves.push(...dests.map(dest => new Move(player, Bug.Q, dest)));
-			// console.log(moves);
-			return moves;
+
+		// We cannot move pieces until our bee is down
+		if (board.bees[player]) {
+			// Get all moves for every piece
+			board.forEachPiece(piece => {
+				// Not your turn
+				if (piece.player !== player) { return; }
+				// Breaks the hive
+				if (piece.artPoint) { return; }
+				// Hidden under something
+				if (board.get(piece.axial) !== piece) { return }
+
+				const dests = this.getPieceMoves(board, piece);
+				moves.push(...dests.map(move => new Move(player, piece.bug, move, piece.axial)));
+			});
 		}
 
-		board.forEachPiece(piece => {
-			if (piece.player !== player) { return; }
-			if (piece.artPoint) { return; }
-			const dests = this.getPieceMoves(board, piece);
-			moves.push(...dests.map(move => new Move(player, piece.bug, move, piece.axial)));
-		});
-		const dests = this.placeable(board) as Vec[];
-
-		// TODO: Bee check
-		for (const bug of board.currentPool().bugs()) {
+		const dests = this.placeable(board, player) as Vec[];
+		for (const bug of board.currentPool().bugs(board.turn)) {
 			moves.push(...dests.map(move => new Move(player, bug, move)));
 		}
 
@@ -100,17 +104,17 @@ export class Moves {
 	 * Valid placement means touching a tile of your color
 	 * but no tiles of the opponents' colors
 	 */
-	static placeable(board: Board): Vec[] {
+	static placeable(board: Board, player = board.currentPlayer): Vec[] {
 		const moves: Map<string, Vec> = new Map();
 
 		board.forEachPiece(p => {
-			if (p.player === board.currentPlayer) {
+			if (p.player === player) {
 				p.forSurrounding(pos => {
 					if (board.get(pos)) { return; }
 					let flag = false;
 					Slot.forSurrounding(pos, bordering => {
 						let bp = board.get(bordering)
-						if (bp && bp.player !== board.currentPlayer) {
+						if (bp && bp.player !== player) {
 							flag = true;
 						}
 					});
@@ -287,3 +291,5 @@ export class Moves {
 	}
 
 }
+
+(window as any).moves = Moves;

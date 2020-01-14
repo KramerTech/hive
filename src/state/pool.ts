@@ -41,8 +41,12 @@ export class PiecePool {
 		return this.pools[bug].shift() as Piece;
 	}
 	
-	bugs(): Bug[] {
+	bugs(turn: number): Bug[] {
 		const bugs: Bug[] = [];
+		
+		// The bee must be placed by the 4th move
+		if (Math.floor(turn / 2) === 3 && this.has(Bug.Q)) { return [Bug.Q]; }
+
 		for (const bug in this.pools) {
 			if (this.pools[bug].length > 0) {
 				bugs.push(bug as Bug);

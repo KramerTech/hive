@@ -9,11 +9,9 @@ import { Slot } from "./slot";
 export class Piece {
 
 	public artPoint = false;
-	
-	public parent?: Piece;
 	public visited = false;
 	
-	public depth!: number;
+	public tin!: number;
 	public low!: number;
 
 
