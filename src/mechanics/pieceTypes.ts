@@ -4,7 +4,7 @@ export enum Bug {
 	G = "hopper",
 	S = "spider",
 	B = "beetle",
-	L = "lady",
+	L = "ladybug",
 	M = "mosquito"
 }
 

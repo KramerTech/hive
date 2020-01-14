@@ -38,10 +38,7 @@ export class Piece {
 		g.fillStyle = color;
 		g.strokeStyle = "black";
 		
-		if (this.level === 0) {
-			Polygon.draw(g, 6, false);
-			g.fill();
-		} else {
+		if (this.level > 0) {
 			Polygon.forEachEdge(6, false, (vert, prev, i) => {
 				if (i % 2 === 0) { return; }
 				g.beginPath();
@@ -51,6 +48,9 @@ export class Piece {
 				g.fill();
 				g.stroke();
 			});
+		} else {
+			Polygon.draw(g, 6, false);
+			g.fill();
 		}
 
 		g.strokeStyle = "black";

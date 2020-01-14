@@ -4,18 +4,18 @@ import { Env } from "../state/env";
 import { Piece } from "../state/piece";
 import { Vec } from "../vec";
 import { Util } from "../util";
+import { Bugs } from "../mechanics/pieceTypes";
 
 export class Input {
 
 	public static moveDelta = new Vec();
 
-	// Set to true when the mouse moves, false when mouse down
-	// So, if still false on mouse up, we clicked without dragging around
 	// Used to avoid selecting territories when dragging around
 	private dragFlag = false;
 
 	private mouseDown = false;
-	private rightOn = false;
+
+	private pickCycle = 0;
 
 	constructor(
 		public board: Board,
@@ -30,9 +30,6 @@ export class Input {
 
 	private down(event: MouseEvent) {
 		if (event.button === 0) {
-			if (this.rightOn) {
-				return this.up(event);
-			}
 			this.dragFlag = false;
 			if (!this.pickup()) {
 				this.mouseDown = true;
@@ -51,11 +48,6 @@ export class Input {
 		} else if (event.button === 2) {
 			this.rightClick();
 		}
-		// else if (event.button === 1) {
-		// 	if (tile && tile.piece) tile.piece.nextTurn();
-		// 	// 	Move.make(this.game, undefined, tile);
-		// 	// }
-		// }
 	}
 
 	private wheel(event: MouseWheelEvent) {
@@ -66,7 +58,7 @@ export class Input {
 		Env.mouse.set(event.clientX, event.clientY);
 		Env.calcHex();
 		if (Env.movingTile) {
-			Input.moveDelta.set(Vec.sub(Env.world, Env.movingTile.cart));
+			Input.moveDelta.set(Env.world).sub(Env.movingTile.cart).sub(Env.dragStart);
 		} else if (this.mouseDown) {
 			Env.slide.add(event.movementX, event.movementY);
 		}
@@ -74,87 +66,70 @@ export class Input {
 	}
 
 	private rightClick() {
-		if (Env.turnEnded) { return; }
-
-		let tile = this.board.getSlot(Env.hex).getTop();
-
-		this.rightOn = false;
-		Input.moveDelta.zero();
-
-		// We're dragging around a piece
+		if (this.mouseDown) { return; }
 		if (Env.movingTile) {
-			// But in any case, stop dragging
-			return this.reset();
+			this.pickCycle++;
+			this.pickCycle %= Bugs.length;
 		}
-
-		// Right clicking the void creates a temporary piece to be placed down
-		if (!tile) {
-			// TODO: pull from appropriate pool
-			// Piece.NEW_PIECE.axial = Env.hex.clone();
-			// Piece.NEW_PIECE.cart = Util.axialToCartesian(Env.hex);
-			// this.dragTile(Piece.NEW_PIECE, true);
+		const bugs = this.board.currentPool().bugs(this.board.turn);
+		if (!bugs.length) {
+			console.log("All of out pieces");
 			return;
 		}
-		
-		let mine = tile && tile.player === this.board.currentPlayer;
 
-		// If all else has failed, buy a piece at the selected location
-		console.log("Buy Piece");
-		// Move.make(game, undefined, tile);
+		const piece = this.board.currentPool().get(bugs[this.pickCycle % bugs.length]);
+		// console.log("Place", piece.bug, this.pickCycle);
+		
+		this.dragPiece(piece, true);
 	}
 
 	public reset() {
 		if (Env.movingTile) { Env.movingTile.drag = false; }
 		delete Env.movingTile;
 		delete Env.pieceMoves;
-		this.rightOn = false;
 		this.mouseDown = false;
 		Input.moveDelta.zero();
 	}
 
-	private dragTile(piece: Piece, right?: boolean) {
-		Env.movingTile = piece;
-		if (!piece.artPoint) {
-			Env.pieceMoves = Moves.getPieceMoves(this.board, piece).map(move => Util.axialToCartesian(move));
+	private dragPiece(piece: Piece, place?: boolean) {
+		if (place) {
+			Env.pieceMoves = Moves.placeable(this.board).map(move => Util.axialToCartesian(move));
+			if (Env.movingTile) {
+				Env.movingTile.drag = false;
+			} else {
+				Env.dragStart.zero();
+				Input.moveDelta.set(Env.world).sub(piece.cart)
+			}
+		} else {
+			if (!piece.artPoint) {
+				Env.pieceMoves = Moves.getPieceMoves(this.board, piece).map(move => Util.axialToCartesian(move));
+			}
+			Env.dragStart.set(Env.world).sub(piece.cart);
 		}
+		Env.movingTile = piece;
 		piece.drag = true;
-		if (right) { this.rightOn = true; }
 	}
 	
-	pickup(): boolean {
+	private pickup(): boolean {
 		let piece = this.board.getSlot(Env.hex).getTop();
 
-		if (Env.movingTile) {
-			return true;
-		}
-
+		if (Env.movingTile) { return true; }
 		if (!piece || piece.player !== this.board.currentPlayer) { return false; }
 
-		this.dragTile(piece as Piece);
+		this.dragPiece(piece as Piece);
 		return true;
 	}
 
 	private release() { try {
-		if (!Env.movingTile) {
-			return;
-		}
-		
-		let dest = Env.hex;
-		
-		// Do a buy move if we created a new piece out in the void
-		// if (Env.movingTile === Tile.NEW_PIECE) {
-		// 	// (deleting the origin turns it into a buy)
-		// 	Env.movingTile.drag = false;
-		// 	delete Env.movingTile;
-		// }
-
+		if (!Env.movingTile) { return; }
+		const src = Env.movingTile.level < 0 ? undefined : Env.movingTile.axial;
 		const move = new Move(
 			Env.movingTile.player,
 			Env.movingTile.bug,
-			dest,
-			Env.movingTile.axial,
+			Env.hex,
+			src,
 		);
-		Moves.make(this.board, move);
+		Moves.make(this.board, move, true);
 	} finally {
 		this.reset();
 	}}

@@ -39,35 +39,35 @@ export class Board {
 			this.pools.push(new PiecePool(i));
 		}
 
-		// RANDOM BOARD FOR TESTING
+		// // RANDOM BOARD FOR TESTING
 
-		let pos = new Vec();
-		let size = rand.next(1,2);
-		size *= players;
+		// let pos = new Vec();
+		// let size = rand.next(1,2);
+		// size *= players;
 
-		let lastDir = 0;
-		for (let i = 0; i < size; i++) {
-			// Don't go the same direction more than once
-			let dirNum = rand.next(5)
-			if (dirNum >= lastDir) dirNum++;
-			lastDir = dirNum;
+		// let lastDir = 0;
+		// for (let i = 0; i < size; i++) {
+		// 	// Don't go the same direction more than once
+		// 	let dirNum = rand.next(5)
+		// 	if (dirNum >= lastDir) dirNum++;
+		// 	lastDir = dirNum;
 
-			// Get the axial vec of the chosen direction
-			let dir = Slot.ORDER[dirNum];
+		// 	// Get the axial vec of the chosen direction
+		// 	let dir = Slot.ORDER[dirNum];
 
-			// Keep going in that direction until there's an empty space
-			do { pos.add(dir); }
-			while (this.get(pos));
+		// 	// Keep going in that direction until there's an empty space
+		// 	do { pos.add(dir); }
+		// 	while (this.get(pos));
 
-			// Fill that empty space
-			const pool = this.pools[i % this.players];
-			let bug: Bug;
-			do {
-				bug = Bugs[rand.next(Bugs.length)];
-			} while (!pool.has(bug));
-			this.placePiece(pool.use(bug), pos.clone());
-			this.turn++;
-		}
+		// 	// Fill that empty space
+		// 	const pool = this.pools[i % this.players];
+		// 	let bug: Bug;
+		// 	do {
+		// 		bug = Bugs[rand.next(Bugs.length)];
+		// 	} while (!pool.has(bug));
+		// 	this.placePiece(pool.use(bug), pos.clone());
+		// 	this.turn++;
+		// }
 
 		this.findArticulationPoints();
 	}

@@ -4,6 +4,7 @@ import { Bug } from "./pieceTypes";
 import { Piece } from "../state/piece";
 import { Slot } from "../state/slot";
 import { Env } from "../state/env";
+import { getBestMove } from "../ai/evaluator";
 
 export class Move {
 	constructor(
@@ -15,7 +16,7 @@ export class Move {
 }
 
 export class Moves {
-	static make(board: Board, move: Move): boolean {
+	static make(board: Board, move: Move, human?: boolean): boolean {
 		if (move.player !== board.currentPlayer) { return false; }
 		
 		// Sanity check
@@ -26,7 +27,7 @@ export class Moves {
 			piece = board.currentPool().get(move.bug);
 		}
 		if (!piece) {
-			console.log("NO PIECE TO BE MOVED");
+			console.log(move.src ? "Pool does not contain a " + move.bug : "No piece at source " + move.src);
 			return false;
 		}
 
@@ -35,7 +36,7 @@ export class Moves {
 			// Disjoint graphs check
 			// Can safely be ignored if moving a stacked piece
 			if (piece.level === 0 && Env.validate && piece.artPoint) {
-				console.log("THIS MOVE WOULD BREAK THE HIVE");
+				console.log("Hive break");
 				return false;	
 			}
 
@@ -49,10 +50,22 @@ export class Moves {
 		if (!Env.validate || this.moveValid(move, valids)) {
 			board.move(move);
 			
+			// TODO Check gameover
+
+			if (this.getAllMoves(board).length === 0) {
+				console.log("No moves for", board.currentPlayer ? "black" : "white");
+				board.nextTurn();
+			} else if (human) {
+				console.log(this.getAllMoves(board));
+				console.log("AI Moving");
+				this.make(board, getBestMove(board, 3));
+			}
 			//const moves = this.getAllMoves(board);
 			//console.log(moves.length, moves);
 
 			return true;
+		} else {
+			console.log("Invalid", move.src ? "move" : "placement");
 		}
 
 		return false;
@@ -60,7 +73,7 @@ export class Moves {
 
 	static moveValid(move: Move, valids: Vec[]): boolean {
 		for (const valid of valids) {
-			if (valid.equals(move.dest)) {
+			if (move.dest.equals(valid)) {
 				return true;
 			}
 		}
@@ -105,6 +118,12 @@ export class Moves {
 	 * but no tiles of the opponents' colors
 	 */
 	static placeable(board: Board, player = board.currentPlayer): Vec[] {
+		if (board.turn === 0) {
+			return [Vec.ZERO];
+		} else if (board.turn === 1) {
+			return Slot.ORDER;
+		}
+
 		const moves: Map<string, Vec> = new Map();
 
 		board.forEachPiece(p => {
@@ -164,7 +183,7 @@ export class Moves {
 		return moves;
 	}
 
-	static lady(board: Board, piece: Piece): Vec[] {
+	static ladybug(board: Board, piece: Piece): Vec[] {
 		const moves: Map<string, Vec> = new Map<string, Vec>();
 		piece.forSurrounding(pos => {
 			const p1 = board.get(pos);

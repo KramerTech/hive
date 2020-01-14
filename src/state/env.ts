@@ -12,10 +12,11 @@ export class Env {
 
 	public static movingTile?: Piece;
 	public static pieceMoves?: Vec[];
-
+	
 	public static hex = new Vec();
 	public static world = new Vec();
 	public static mouse = new Vec();
+	public static dragStart = new Vec();
 	
 	public static scale = 30;
 	

@@ -4,7 +4,7 @@ import { Polygon } from "./polygons";
 
 export class Draw {
 
-	static tile(
+	static piece(
 		tile: Piece,
 		g: CanvasRenderingContext2D,
 		hover: boolean,

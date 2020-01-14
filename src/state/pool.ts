@@ -1,5 +1,6 @@
 import { Bug } from "../mechanics/pieceTypes";
 import { Piece } from "./piece";
+import { Vec } from "../vec";
 
 const ALLOC: {[key: string]: number} = {};
 ALLOC[Bug.Q] = 1;
@@ -24,7 +25,12 @@ export class PiecePool {
 			}
 		} else {
 			for (const bug in ALLOC) {
-				this.pools[bug] = new Array(ALLOC[bug]).fill(1).map(() => new Piece(player, bug as Bug));
+				this.pools[bug] = new Array(ALLOC[bug]).fill(1).map(() => {
+					const piece = new Piece(player, bug as Bug);
+					piece.update(Vec.ZERO);
+					piece.level = -1;
+					return piece;
+				});
 			}
 		}
     }
@@ -38,7 +44,7 @@ export class PiecePool {
 	}
 
     use(bug: Bug): Piece {
-		return this.pools[bug].shift() as Piece;
+		return (this.pools[bug].shift() as Piece).clone() as Piece;
 	}
 	
 	bugs(turn: number): Bug[] {

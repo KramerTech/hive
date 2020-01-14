@@ -127,8 +127,15 @@ export class Graphics {
 	}
 
 	private drawTile(g: CanvasRenderingContext2D, piece: Piece) {
-		const slot = this.board.getSlot(piece.axial);
-		if (piece.level !== slot.size() - 1) { return; }
+		let stack: Piece[];
+		if (piece.level < 0) {
+			// Potential piece (not actually placed yet)
+			stack = [piece];
+		} else {
+			const slot = this.board.getSlot(piece.axial);
+			if (piece.level !== slot.size() - 1) { return; }
+			stack = slot.stack;
+		}
 
 		g.save();
 		g.translate(piece.cart.x, piece.cart.y);
@@ -136,14 +143,16 @@ export class Graphics {
 
 		let hover = this.board.currentPlayer === piece.player && (piece.drag || piece.axial.equals(Env.hex) && !Env.movingTile);
 
-		for (const piece of slot.stack) {
+		for (const piece of stack) {
 			g.save();
 			if (piece === Env.movingTile) {
 				g.translate(Input.moveDelta.x, Input.moveDelta.y);
 			}
+
+			const top = piece.level === stack.length - 1 || piece.level < 0;
 			
 			piece.draw(g);
-			Draw.tile(piece, g, hover, piece.level === slot.size() - 1);
+			Draw.piece(piece, g, hover, top);
 			g.restore();
 
 			g.translate(Var.STACK_OFF.x, Var.STACK_OFF.y);
