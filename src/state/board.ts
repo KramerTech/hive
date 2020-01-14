@@ -38,7 +38,7 @@ export class Board {
 		// RANDOM BOARD FOR TESTING
 
 		let pos = new Vec();
-		let size = rand.next(13, 14);
+		let size = rand.next(1,2);
 		size *= players;
 
 		let lastDir = 0;

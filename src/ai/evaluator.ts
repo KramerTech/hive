@@ -33,7 +33,7 @@ export function evaluate(board: Board) {
     } else {
         score -= 1;
     }
-    if (bbee) {
+    if (bbee.length === 1) {
         let moves = Moves.getAllMoves(board, 0);
         const bSur: Vec[] = [];
         bbee[0].forSurrounding(pos => {

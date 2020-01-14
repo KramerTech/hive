@@ -72,7 +72,14 @@ export class Moves {
 	}
 	
 	static getAllMoves(board: Board, player = board.currentPlayer): Move[] {
-        const moves: Move[] = [];
+		const moves: Move[] = [];
+		if (Math.floor(board.turn / 2) === 3 && board.currentPool().has(Bug.Q)) {
+			const dests = this.placeable(board) as Vec[];
+			moves.push(...dests.map(move => new Move(player, Bug.Q, move)));
+			console.log(moves);
+			return moves;
+		}
+
 		board.forEachPiece(piece => {
 			if (piece.player !== player) { return; }
 			if (this.isBridge(board, piece)) { return; }
