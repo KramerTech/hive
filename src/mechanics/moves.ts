@@ -3,6 +3,7 @@ import { Vec } from "../vec";
 import { Bug } from "./pieceTypes";
 import { Piece } from "../state/piece";
 import { Slot } from "../state/slot";
+import { Env } from "../state/env";
 
 export class Move {
 	constructor(
@@ -32,7 +33,7 @@ export class Moves {
 		let valids;
 		if (move.src) {
 			// Disjoint graphs check
-			if (this.isBridge(board, piece)) {
+			if (Env.validate && piece.artPoint) {
 				console.log("THIS MOVE WOULD BREAK THE HIVE");
 				return false;	
 			}
@@ -44,7 +45,7 @@ export class Moves {
 			valids = this.placeable(board);
 		}
 
-		if (this.moveValid(move, valids)) {
+		if (!Env.validate || this.moveValid(move, valids)) {
 			board.move(move);
 			
 			//const moves = this.getAllMoves(board);
@@ -57,8 +58,6 @@ export class Moves {
 	}
 
 	static moveValid(move: Move, valids: Vec[]): boolean {
-		// return true;
-
 		for (const valid of valids) {
 			if (valid.equals(move.dest)) {
 				return true;
@@ -75,7 +74,7 @@ export class Moves {
         const moves: Move[] = [];
 		board.forEachPiece(piece => {
 			if (piece.player !== player) { return; }
-			if (this.isBridge(board, piece)) { return; }
+			if (piece.artPoint) { return; }
 			const dests = this.getPieceMoves(board, piece);
 			moves.push(...dests.map(move => new Move(player, piece.bug, move, piece.axial)));
 		});
@@ -87,41 +86,6 @@ export class Moves {
 		}
 
 		return moves;
-	}
-	
-	/**
-	 * Returns true if the one-hive condition prevents this piece from moving
-	 * In other words, true if removing this node would create two disjoint graphs
-	 */
-	static isBridge(board: Board, piece: Piece) {
-		if (piece.level > 0) {
-			return false;
-		}
-
-		const findNext = (idx: number, hasTile: boolean) => {
-			for (let i = idx; i < idx+6; i++) {
-				const test = Vec.add(piece.axial, Slot.ORDER[i % 6]);
-				if (!!board.get(test) === hasTile) {
-					return i % 6;
-				}
-			}
-			return -1;
-		}
-
-		const firstEmpty = findNext(0, false);
-		if (firstEmpty === -1) {
-			return false;
-		}
-
-		const nextFilled = findNext(firstEmpty + 1, true);
-		const nextEmpty = findNext(nextFilled + 1, false);
-		const finalFilled = findNext(nextEmpty + 1, true);
-		if (finalFilled === nextFilled) {
-			return false;
-		}
-
-		return true;
-
 	}
 
 	/**
@@ -272,6 +236,10 @@ export class Moves {
 	}
 
 	static mosquito(board: Board, piece: Piece): Vec[] {
+		if (piece.level > 0) {
+			return this.beetle(board, piece);
+		}
+
 		const moves: Map<string, Vec> = new Map();
 		const checked: {[key: string]: boolean} = {};
 
@@ -283,12 +251,10 @@ export class Moves {
 			const check = board.get(pos);
 			if (check && !checked[check.bug]) {
 				checked[check.bug] = true;
-				const newMoves: Vec[] = this.getPieceMoves(board, piece, check.bug);
-				newMoves.forEach(m => moves.set(JSON.stringify(m), m))
+				const newMoves = this.getPieceMoves(board, piece, check.bug);
+				newMoves.forEach(m => moves.set(m.toString(), m));
 			}
 		});
-
-		// TODO: prune duplicates for when we explore all paths
 
 		return Array.from(moves.values());
 	}

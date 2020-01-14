@@ -64,7 +64,7 @@ export class Graphics {
 	}
 
 	slideCenter() {
-		Env.slide.set(this.canvas.width / 2, this.canvas.height / 2).sub(Vec.div(this.size, 2).mult(Env.scale));
+		Env.slide.set(this.canvas.width / 2, this.canvas.height / 2);//.sub(Vec.div(this.size, 2).mult(Env.scale));
 	}
 
 	private draw(dt: number) {

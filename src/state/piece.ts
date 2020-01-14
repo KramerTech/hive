@@ -8,14 +8,20 @@ import { Slot } from "./slot";
 
 export class Piece {
 
+	public artPoint = false;
+	
+	public parent?: Piece;
+	public visited = false;
+	
+	public depth!: number;
+	public low!: number;
+
+
 	public cart!: Vec;
 	public axial!: Vec;
 	public level = 0;
 	
-	public hover = false;
 	public drag = false;
-
-	public index!: number;
 
 	constructor(
 		public player: number,
@@ -97,6 +103,7 @@ export class Piece {
 
 	clone() {
 		let piece = new Piece(this.player, this.bug);
+		piece.artPoint = this.artPoint;
 		piece.axial = this.axial;
 		return piece;
 	}

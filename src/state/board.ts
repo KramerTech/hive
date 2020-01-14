@@ -63,6 +63,8 @@ export class Board {
 			} while (!pool.has(bug));
 			this.placePiece(pool.use(bug), pos.clone());
 		}
+
+		this.findArticulationPoints();
 	}
 
 	// private rotate(tile: Tile) {
@@ -77,6 +79,44 @@ export class Board {
 		this.pieces.forEach(cb);
 	}
 
+	findArticulationPoints() {
+		this.pieces.forEach(p => {
+			p.artPoint = false;
+			p.visited = false;
+			delete p.parent;
+		});
+		console.log("FIND ARTICULATIONS");
+		this.articulationDFS(this.pieces[0], 0);
+	}
+
+	// Based on https://en.wikipedia.org/wiki/Biconnected_component
+	articulationDFS(piece: Piece, depth: number) {
+		piece.visited = true;
+		piece.depth = depth;
+		piece.low = depth;
+
+		let children = 0;
+		let articulation = false;
+
+		piece.forSurrounding(pos => {
+			const check = this.get(pos);
+			if (!check) { return; }
+			if (!check.visited) {
+				children++;
+				check.parent = piece;
+				this.articulationDFS(check, depth + 1);
+				articulation = articulation || check.low > piece.depth;
+				piece.low = Math.min(piece.low, check.low);
+			} else if (piece.parent !== check) {
+				piece.low = Math.min(piece.low, check.depth);
+			}
+		});
+
+		if (piece.parent && articulation || !piece.parent && children > 1) {
+			piece.artPoint = true;
+		}
+	}
+
     getPiecesByType(bug: Bug, player: number) {
         let pieces = [];
         for (const piece of this.pieces) {
@@ -88,7 +128,6 @@ export class Board {
     }
 
     placePiece(piece: Piece, dest: Vec) {
-		piece.index = this.pieces.length;
 		this.pieces.push(piece);
 		piece.update(dest);
 		this.getSlot(dest).pushPiece(piece);
@@ -108,16 +147,8 @@ export class Board {
 		//TODO: check if we moved next to a queen, and if so, is that queen surrounded?
 
 		this.nextTurn();
+		this.findArticulationPoints();
 	}
-	
-	// size(): Vec {
-	// 	let max = this.pieces[0].cart.clone();
-	// 	for (let tile of this.pieces) {
-	// 		let c = tile.cart;
-	// 		max.max(c);
-	// 	}
-	// 	return max.add(Util.axialToCartesian(new Vec(1, 1)));
-	// }
 
 	get(axial: Vec): Piece | undefined {
 		const slot = this.getSlot(axial);

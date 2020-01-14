@@ -5,8 +5,8 @@ import { Var } from "./var";
 
 export class Env {
 
-	public static myPlayer: number;
-	public static turnEnded = false;
+	public static validate = true;
+
 	public static turnRotation = 0;
 	public static gameStarted = false;
 
@@ -25,8 +25,6 @@ export class Env {
 
 	public static slide = new Vec();
 	private static slideTarget = new Vec();
-
-	public static selectedTerritory: string | undefined;
 
 	static zoom(out: boolean) {
 		this.scaleTarget *= (out ? 1 / Var.SCALE_SPEED : Var.SCALE_SPEED);
@@ -70,5 +68,6 @@ export class Env {
 		this.hex = Util.cartesianToAxial(this.world);
 	}
 
-
 }
+
+(window as any).env = Env;

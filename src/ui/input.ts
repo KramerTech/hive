@@ -114,7 +114,7 @@ export class Input {
 
 	private dragTile(piece: Piece, right?: boolean) {
 		Env.movingTile = piece;
-		if (!Moves.isBridge(this.board, piece)) {
+		if (!piece.artPoint) {
 			Env.pieceMoves = Moves.getPieceMoves(this.board, piece).map(move => Util.axialToCartesian(move));
 		}
 		piece.drag = true;
@@ -122,7 +122,6 @@ export class Input {
 	}
 	
 	pickup(): boolean {
-		if (Env.turnEnded) { return false; }
 		let piece = this.board.getSlot(Env.hex).getTop();
 
 		if (Env.movingTile) {
