@@ -85,7 +85,6 @@ export class Board {
 			p.visited = false;
 			delete p.parent;
 		});
-		console.log("FIND ARTICULATIONS");
 		this.articulationDFS(this.pieces[0], 0);
 	}
 
@@ -189,13 +188,15 @@ export class Board {
 
 		for (const slot of this.grid) {
 			board.grid.push(slot.clone());
+			if (slot.stack.length) {
+				board.pieces.push(...slot.stack);
+			}
 		}
-		for (const piece of this.pieces) {
-			board.pieces.push(piece.clone());
-		}
+
 		for (const pool of this.pools) {
 			board.pools.push(pool.clone());
 		}
+
 		return board;
 	}
 	
