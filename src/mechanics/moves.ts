@@ -119,7 +119,7 @@ export class Moves {
 						}
 					});
 					if (!flag) {
-						moves.set(JSON.stringify(pos), pos);
+						moves.set(pos.x + pos.y * 10000 + '', pos);
 					}
 				});
 			}
@@ -174,7 +174,7 @@ export class Moves {
 				if (!p2 || p2 === piece) { return; }
 				p2.forSurrounding(pos3 => {
 					if (!board.get(pos3)) {
-						moves.set(JSON.stringify(pos3), pos3);
+						moves.set(pos3.x + pos3.y * 10000 + '', pos3);
 					}
 				})
 			});
@@ -185,7 +185,7 @@ export class Moves {
 	static spider(board: Board, piece: Piece): Vec[] {
 		const moves: Vec[] = [];
 		const prevMoves: Set<string> = new Set<string>();
-		prevMoves.add(JSON.stringify(piece.axial));
+		prevMoves.add(piece.axial.x + piece.axial.y * 10000 + '');
 		const active: any[] = [{d: 0, p: piece.axial}];
 		while (active.length > 0) {
 			const curAct = active.pop();
@@ -203,8 +203,9 @@ export class Moves {
 				}
 			});
 			curMoves.forEach((move: Vec) => {
-				if (!prevMoves.has(JSON.stringify(move))) {
-					prevMoves.add(JSON.stringify(move));
+				const k = move.x + move.y * 10000 + '';
+				if (!prevMoves.has(k)) {
+					prevMoves.add(k);
 					if (curAct.d === 2) {
 						moves.push(move);
 					} else {
@@ -219,7 +220,7 @@ export class Moves {
 	static ant(board: Board, piece: Piece): Vec[] {
 		const moves: Vec[] = [];
 		const prevMoves: Set<string> = new Set<string>();
-		prevMoves.add(JSON.stringify(piece.axial));
+		prevMoves.add(piece.axial.x + piece.axial.y * 10000 + '');
 		const active: Vec[] = [piece.axial];
 		while (active.length > 0) {
 			const curPos = active.pop() as Vec;
@@ -236,8 +237,9 @@ export class Moves {
 				}
 			});
 			curMoves.forEach((move: Vec) => {
-				if (!prevMoves.has(JSON.stringify(move))) {
-					prevMoves.add(JSON.stringify(move));
+				const k = move.x + move.y * 10000 + '';
+				if (!prevMoves.has(k)) {
+					prevMoves.add(k);
 					moves.push(move);
 					active.push(move);
 				}

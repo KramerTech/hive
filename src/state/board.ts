@@ -206,7 +206,7 @@ export class Board {
 			for (const piece of clone.stack) {
 				board.pieces.push(piece);
 				if (piece.bug === Bug.Q) {
-					this.bees[piece.player] = piece;
+					board.bees[piece.player] = piece;
 				}
 			}
 		}
