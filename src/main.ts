@@ -22,7 +22,7 @@ export class Main {
 	}
 
 	public newGame(players: number) {
-		const seed = 445201;//Math.floor(Math.random() * 1000000);
+		const seed = Math.floor(Math.random() * 1000000);
 		console.log(seed);
 		this.game = new Board(players, 26, 26, new Rand(seed));
 		this.setGame();
