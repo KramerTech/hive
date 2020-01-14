@@ -150,8 +150,6 @@ export class Graphics {
 			}
 
 			const top = piece.level === stack.length - 1 || piece.level < 0;
-			
-			piece.draw(g);
 			Draw.piece(piece, g, hover, top);
 			g.restore();
 

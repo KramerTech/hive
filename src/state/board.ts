@@ -1,4 +1,4 @@
-import { Bug, Bugs } from "../mechanics/pieceTypes";
+import { Bugs } from "../mechanics/pieceTypes";
 import { Rand } from "../random";
 import { Vec } from "../vec";
 import { Piece } from "./piece";
@@ -25,51 +25,12 @@ export class Board {
 		public players: number,
 		public width: number,
 		public height: number,
-		public rand: Rand,
 		clone?: boolean,
 	) {
 		this.offset = Math.floor(this.height / 2) * this.width + Math.floor(this.width / 2);
 		if (clone) { return; }
-
 		(window as any)["board"] = this;
-
-		this.grid = new Array(this.width * this.height).fill(1).map(() => new Slot());
-
-		for (let i = 0; i < players; i++) {
-			this.pools.push(new PiecePool(i));
-		}
-
-		// // RANDOM BOARD FOR TESTING
-
-		// let pos = new Vec();
-		// let size = rand.next(1,2);
-		// size *= players;
-
-		// let lastDir = 0;
-		// for (let i = 0; i < size; i++) {
-		// 	// Don't go the same direction more than once
-		// 	let dirNum = rand.next(5)
-		// 	if (dirNum >= lastDir) dirNum++;
-		// 	lastDir = dirNum;
-
-		// 	// Get the axial vec of the chosen direction
-		// 	let dir = Slot.ORDER[dirNum];
-
-		// 	// Keep going in that direction until there's an empty space
-		// 	do { pos.add(dir); }
-		// 	while (this.get(pos));
-
-		// 	// Fill that empty space
-		// 	const pool = this.pools[i % this.players];
-		// 	let bug: Bug;
-		// 	do {
-		// 		bug = Bugs[rand.next(Bugs.length)];
-		// 	} while (!pool.has(bug));
-		// 	this.placePiece(pool.use(bug), pos.clone());
-		// 	this.turn++;
-		// }
-
-		this.findArticulationPoints();
+		this.reset();
 	}
 
 	// private rotate(tile: Tile) {
@@ -79,6 +40,58 @@ export class Board {
 	// 		this.set(newAxial, new Tile(newAxial, player, r));
 	// 	}
 	// }
+	
+	public reset() {
+		this.turn = 0;
+		this.currentPlayer = 0;
+		
+		this.bees = {};
+		this.pools = [];
+		this.pieces = [];
+		this.grid = new Array(this.width * this.height).fill(1).map(() => new Slot());
+
+		for (let i = 0; i < this.players; i++) {
+			this.pools.push(new PiecePool(i));
+		}
+	}
+
+
+	public randomize(
+		rounds = 1 + Math.floor(Math.random() * PiecePool.TOTAL),
+		seed = Math.floor(Math.random() * 1e6)
+	) {
+		const rand = new Rand(seed);
+		console.log("Randomizing", rounds, "rounds with seed", seed);
+
+		this.reset();
+
+		let pos = new Vec();
+		let size = Math.min(rounds, PiecePool.TOTAL) * this.players;
+
+		let lastDir = 0;
+		for (let i = 0; i < size; i++) {
+			// Don't go the same direction more than once
+			let dirNum = rand.next(5)
+			if (dirNum >= lastDir) dirNum++;
+			lastDir = dirNum;
+
+			// Get the axial vec of the chosen direction
+			let dir = Slot.ORDER[dirNum];
+
+			// Keep going in that direction until there's an empty space
+			do { pos.add(dir); }
+			while (this.get(pos));
+
+			// Fill that empty space with a pseudo-rand available bug
+			const pool = this.currentPool()
+			const bugs = pool.bugs(this.turn);
+			const bug = bugs[rand.next(bugs.length)];
+			this.placePiece(pool.use(bug), pos.clone());
+			this.nextTurn();
+		}
+
+		this.findArticulationPoints();
+	}
 
 	public forEachPiece(cb: (tile: Piece, i: number) => void) {
 		this.pieces.forEach(cb);
@@ -127,7 +140,7 @@ export class Board {
 		}
 	}
 
-    getPiecesByType(bug: Bug, player: number) {
+    getPiecesByType(bug: Bugs, player: number) {
         let pieces = [];
         for (const piece of this.pieces) {
 			if (piece.bug === bug && piece.player === player) {
@@ -141,7 +154,7 @@ export class Board {
 		this.pieces.push(piece);
 		piece.update(dest);
 		this.getSlot(dest).pushPiece(piece);
-		if (piece.bug === Bug.Q) {
+		if (piece.bug === Bugs.QUEEN) {
 			this.bees[piece.player] = piece;
 		}
 	}
@@ -193,7 +206,6 @@ export class Board {
 			this.players,
 			this.width,
 			this.height,
-			this.rand,
 			true,
 		);
 
@@ -205,7 +217,7 @@ export class Board {
 			board.grid.push(clone);
 			for (const piece of clone.stack) {
 				board.pieces.push(piece);
-				if (piece.bug === Bug.Q) {
+				if (piece.bug === Bugs.QUEEN) {
 					board.bees[piece.player] = piece;
 				}
 			}

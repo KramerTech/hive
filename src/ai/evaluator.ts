@@ -1,6 +1,6 @@
 import { Moves, Move } from "../mechanics/moves";
 import { Board } from "../state/board";
-import { Bug } from "../mechanics/pieceTypes";
+import { Bugs } from "../mechanics/pieceTypes";
 import { Vec } from "../vec";
 
 export function evaluate(board: Board) {
@@ -8,8 +8,8 @@ export function evaluate(board: Board) {
     const possiblePenalty = .1;
 
     let score = 0;
-    let wbee = board.getPiecesByType(Bug.Q, 0);
-    let bbee = board.getPiecesByType(Bug.Q, 1);
+    let wbee = board.getPiecesByType(Bugs.QUEEN, 0);
+    let bbee = board.getPiecesByType(Bugs.QUEEN, 1);
     let wOpen = 6;
     let bOpen = 6;
     if (wbee.length === 1) {

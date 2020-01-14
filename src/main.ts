@@ -3,7 +3,7 @@ import { Input } from "./ui/input";
 import { Moves } from "./mechanics/moves";
 import { getBestMove } from "./ai/evaluator";
 import { Board } from "./state/board";
-import { Rand } from "./random";
+import { PiecePool } from "./state/pool";
 
 export class Main {
 
@@ -22,9 +22,8 @@ export class Main {
 	}
 
 	public newGame(players: number) {
-		const seed = Math.floor(Math.random() * 1000000);
-		console.log(seed);
-		this.game = new Board(players, 26, 26, new Rand(seed));
+		const size = PiecePool.TOTAL * players;
+		this.game = new Board(players, size, size);
 		this.setGame();
 
 		(window as any)["ai"] = (depth: number) => {
@@ -32,10 +31,6 @@ export class Main {
 			console.log(move);
 			Moves.make(this.game, move);
 		}
-
-		// for (let i = 0; i < 10; i++) {
-		// 	(window as any).ai(2);
-		// }
 	}
 
 	public nextTurn() {

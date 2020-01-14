@@ -5,6 +5,7 @@ import { Piece } from "../state/piece";
 import { Vec } from "../vec";
 import { Util } from "../util";
 import { Bugs } from "../mechanics/pieceTypes";
+import { PieceMoves } from "../mechanics/pieceMoves";
 
 export class Input {
 
@@ -67,20 +68,22 @@ export class Input {
 
 	private rightClick() {
 		if (this.mouseDown) { return; }
-		if (Env.movingTile) {
-			this.pickCycle++;
-			this.pickCycle %= Bugs.length;
-		}
-		const bugs = this.board.currentPool().bugs(this.board.turn);
+
+		const pool = this.board.currentPool();
+		const bugs = pool.bugs(this.board.turn);
+		
 		if (!bugs.length) {
 			console.log("All of out pieces");
 			return;
 		}
 
-		const piece = this.board.currentPool().get(bugs[this.pickCycle % bugs.length]);
-		// console.log("Place", piece.bug, this.pickCycle);
-		
-		this.dragPiece(piece, true);
+		// Right click cycles through available bugs
+		if (Env.movingTile) {
+			this.pickCycle++;
+			this.pickCycle %= bugs.length;
+		}
+
+		this.dragPiece(pool.get(bugs[this.pickCycle]), true);
 	}
 
 	public reset() {
@@ -93,7 +96,7 @@ export class Input {
 
 	private dragPiece(piece: Piece, place?: boolean) {
 		if (place) {
-			Env.pieceMoves = Moves.placeable(this.board).map(move => Util.axialToCartesian(move));
+			Env.pieceMoves = Moves.getPlaceable(this.board).map(move => Util.axialToCartesian(move));
 			if (Env.movingTile) {
 				Env.movingTile.drag = false;
 			} else {
@@ -102,7 +105,7 @@ export class Input {
 			}
 		} else {
 			if (!piece.artPoint) {
-				Env.pieceMoves = Moves.getPieceMoves(this.board, piece).map(move => Util.axialToCartesian(move));
+				Env.pieceMoves = PieceMoves.get(this.board, piece).map(move => Util.axialToCartesian(move));
 			}
 			Env.dragStart.set(Env.world).sub(piece.cart);
 		}
