@@ -115,7 +115,7 @@ export class Input {
 		let piece = this.board.get(Env.hex);
 
 		if (Env.movingTile) { return true; }
-		if (!piece || piece.player !== this.board.currentPlayer) { return false; }
+		if (!piece || (Env.validate && piece.player !== this.board.currentPlayer)) { return false; }
 
 		this.dragPiece(piece as Piece);
 		return true;
@@ -130,7 +130,11 @@ export class Input {
 			Env.hex,
 			src,
 		);
-		Moves.make(this.board, move, true);
+		if (Env.validate) {
+			Moves.make(this.board, move, true);
+		} else {
+			this.board.applyMove(move);
+		}
 	} finally {
 		this.reset();
 	}}

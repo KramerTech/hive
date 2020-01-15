@@ -2,21 +2,20 @@ import { Bugs } from "./pieceTypes";
 import { Piece } from "../state/piece";
 import { Vec } from "../vec";
 import { Board } from "../state/board";
-import { Slot } from "../state/slot";
 
-type MoveGetter = (board: Board, piece: Piece) => Vec[];
+type MoveGetter = (board: Board, axial: Vec, piece: Piece) => Vec[];
 
 export class PieceMoves {
 
 	static getters = {} as {[key in Bugs]: MoveGetter};
 
-	static get(board: Board, piece: Piece, bug: Bugs = piece.bug): Vec[] {
+	static get(board: Board, piece: Piece, bug: Bugs = piece.bug, axial = piece.axial): Vec[] {
 		// Disjoint graphs check
 		// Can safely be ignored if moving a stacked piece
 		if (piece.artPoint && piece.level === 0) { return []; }
 		// Can only move after placing bee
 		if (!board.beeDown(piece.player)) return [];
-		return this.getters[bug](board, piece) as Vec[];
+		return this.getters[bug](board, axial, piece) as Vec[];
 	}
 
 } 
@@ -25,31 +24,27 @@ export class PieceMoves {
  * Grasshoppers can jump in a straight line over
  * 1 or more pieces until the first empty slot
  */
-PieceMoves.getters[Bugs.HOPPER] = (board, piece) => {
+PieceMoves.getters[Bugs.HOPPER] = (board, axial) => {
 	const moves: Vec[] = [];
-	piece.forSurrounding((pos, _, dir) => {
-		// Need to hop over at least one piece
-		if (!board.get(pos)) { return; }
-
+	board.forSurroundingPieces(axial, (check, _, dir) => {
+		const pos = check.axial.clone();
 		// Traverse to first blank space
 		do { pos.add(dir); }
-		while (board.get(pos));
+		while (board.has(pos));
 
 		moves.push(pos);
 	});
-
 	return moves;
 }
 
-PieceMoves.getters[Bugs.QUEEN] = (board, piece) => {
+PieceMoves.getters[Bugs.QUEEN] = (board, axial) => {
 	const moves: Vec[] = [];
-	piece.forSurrounding((pos, i) => {
-		if (board.get(pos)) { return; }
-		const back = Vec.add(piece.axial, Slot.ORDER[(i + 5) % 6]);
-		const forth = Vec.add(piece.axial, Slot.ORDER[(i + 1) % 6]);
+	board.forSurroundingSlots(axial, (pos, i) => {
+		const back = Vec.add(axial, Piece.ORDER[(i + 5) % 6]);
+		const forth = Vec.add(axial, Piece.ORDER[(i + 1) % 6]);
 		let count = 0;
-		if (board.get(back)) { count++; }
-		if (board.get(forth)) { count++; }
+		if (board.has(back)) { count++; }
+		if (board.has(forth)) { count++; }
 		if (count === 1) {
 			moves.push(pos);
 		}
@@ -57,74 +52,50 @@ PieceMoves.getters[Bugs.QUEEN] = (board, piece) => {
 	return moves;
 }
 
-PieceMoves.getters[Bugs.LADY] = (board, piece) => {
+PieceMoves.getters[Bugs.LADY] = (board, axial, piece) => {
 	const moves: Map<string, Vec> = new Map<string, Vec>();
-	piece.forSurrounding(pos => {
-		const p1 = board.get(pos);
-		if (!p1) { return; }
-		p1.forSurrounding(pos2 => {
-			const p2 = board.get(pos2);
-			if (!p2 || p2 === piece) { return; }
-			p2.forSurrounding(pos3 => {
-				if (!board.get(pos3)) {
-					moves.set(pos3.x + pos3.y * 10000 + '', pos3);
-				}
-			})
+	board.forSurroundingPieces(axial, p1 => {
+		board.forSurroundingPieces(p1.axial, p2 => {
+			if (p2 === piece) { return; }
+			board.forSurroundingSlots(p2.axial, (slot => {
+				moves.set(slot.toString(), slot);
+			}));
 		});
 	})	
 	return Array.from(moves.values());
 }
 
-PieceMoves.getters[Bugs.SPIDER] = (board, piece) => {
-	const moves: Vec[] = [];
-	const prevMoves: Set<string> = new Set<string>();
-	prevMoves.add(piece.axial.x + piece.axial.y * 10000 + '');
-	const active: any[] = [{d: 0, p: piece.axial}];
-	while (active.length > 0) {
-		const curAct = active.pop();
-		const curPos = curAct.p;
-		const curMoves: Vec[] = [];
-		Slot.forSurrounding(curPos, (pos, i) => {
-			if (board.get(pos)) { return; }
-			const back = Vec.add(curPos, Slot.ORDER[(i + 5) % 6]);
-			const forth = Vec.add(curPos, Slot.ORDER[(i + 1) % 6]);
-			let count = 0;
-			if (board.get(back) && !back.equals(piece.axial)) { count++ }
-			if (board.get(forth) && !forth.equals(piece.axial)) { count++ }
-			if (count === 1) {
-				curMoves.push(pos);
+PieceMoves.getters[Bugs.SPIDER] = (board, axial, piece) => {
+	const moves: Map<string, Vec> = new Map<string, Vec>();
+	const addBack = board.tmpRemove(piece);
+	for (const p1 of PieceMoves.get(board, piece, Bugs.QUEEN)) {
+		for (const p2 of PieceMoves.get(board, piece, Bugs.QUEEN, p1)) {
+			if (p2.equals(axial)) { continue; }
+			for (const p3 of PieceMoves.get(board, piece, Bugs.QUEEN, p2)) {
+				if (p3.equals(p1) || p3.equals(axial)) { continue; }
+				moves.set(p3.toString(), p3);
 			}
-		});
-		curMoves.forEach((move: Vec) => {
-			const k = move.x + move.y * 10000 + '';
-			if (!prevMoves.has(k)) {
-				prevMoves.add(k);
-				if (curAct.d === 2) {
-					moves.push(move);
-				} else {
-					active.push({d: curAct.d+1, p: move});
-				}
-			}
-		});
+		}
 	}
-	return moves;
+	addBack();
+	return Array.from(moves.values());
 }
 
-PieceMoves.getters[Bugs.ANT] = (board, piece) => {
+PieceMoves.getters[Bugs.ANT] = (board, axial) => {
 	const moves: Vec[] = [];
 	const prevMoves: Set<string> = new Set<string>();
-	prevMoves.add(piece.axial.x + piece.axial.y * 10000 + '');
-	const active: Vec[] = [piece.axial];
+	prevMoves.add(axial.x + axial.y * 10000 + '');
+	const active: Vec[] = [axial];
 	while (active.length > 0) {
 		const curPos = active.pop() as Vec;
 		const curMoves: Vec[] = [];
-		Slot.forSurrounding(curPos, (pos, i) => {
+		Piece.forSurrounding(curPos, (pos, i) => {
 			if (board.get(pos)) { return; }
-			const back = Vec.add(curPos, Slot.ORDER[(i + 5) % 6]);
-			const forth = Vec.add(curPos, Slot.ORDER[(i + 1) % 6]);
+			const back = Vec.add(curPos, Piece.ORDER[(i + 5) % 6]);
+			const forth = Vec.add(curPos, Piece.ORDER[(i + 1) % 6]);
 			let count = 0;
-			if (board.get(back) && !back.equals(piece.axial)) { count++ }
-			if (board.get(forth) && !forth.equals(piece.axial)) { count++ }
+			if (board.get(back) && !back.equals(axial)) { count++ }
+			if (board.get(forth) && !forth.equals(axial)) { count++ }
 			if (count === 1) {
 				curMoves.push(pos);
 			}
@@ -141,10 +112,9 @@ PieceMoves.getters[Bugs.ANT] = (board, piece) => {
 	return moves;
 }
 
-PieceMoves.getters[Bugs.MOSQUITO] = (board, piece) => {
-	if (piece.level > 0) {
-		return PieceMoves.get(board, piece, Bugs.BEETLE);
-	}
+PieceMoves.getters[Bugs.MOSQUITO] = (board, axial, piece) => {
+	// If stacked up, move like a beetle
+	if (piece.level > 0) { return PieceMoves.get(board, piece, Bugs.BEETLE); }
 
 	const moves: Map<string, Vec> = new Map();
 	const checked = new Set<Bugs>();
@@ -153,9 +123,8 @@ PieceMoves.getters[Bugs.MOSQUITO] = (board, piece) => {
 	checked.add(Bugs.MOSQUITO);
 	
 	// For each piece we're touching, acquire that piece's moves
-	piece.forSurrounding(pos => {
-		const check = board.get(pos);
-		if (check && !checked.has(check.bug)) {
+	board.forSurroundingPieces(axial, check => {
+		if (!checked.has(check.bug)) {
 			checked.add(check.bug);
 			const newMoves = PieceMoves.get(board, piece, check.bug);
 			newMoves.forEach(m => moves.set(m.toString(), m));
@@ -165,22 +134,22 @@ PieceMoves.getters[Bugs.MOSQUITO] = (board, piece) => {
 	return Array.from(moves.values());
 }
 
-PieceMoves.getters[Bugs.BEETLE] = (board, piece) => {
+PieceMoves.getters[Bugs.BEETLE] = (board, axial, piece) => {
 	const moves: Vec[] = [];
-	piece.forSurrounding((pos, i) => {
-		if (piece.level > 0 || board.get(pos)) {
-			moves.push(pos);
-			return;
-		}
-		
-		const back = Vec.add(piece.axial, Slot.ORDER[(i + 5) % 6]);
-		const forth = Vec.add(piece.axial, Slot.ORDER[(i + 1) % 6]);
-		let count = 0;
-		if (board.get(back)) { count++; }
-		if (board.get(forth)) { count++; }
-		if (count === 1) {
-			moves.push(pos);
-		}
+
+	// While crawling, we can move anywhere
+	if (piece.level > 0) {
+		Piece.ORDER.forEach(v => moves.push(Vec.add(v, axial)));
+		return moves;
+	}
+
+	// While on the ground, we can hop onto any piece
+	board.forSurroundingPieces(axial, check => {
+		moves.push(check.axial);
 	});
+
+	// Or we can move just like a queen
+	PieceMoves.get(board, piece, Bugs.QUEEN).forEach(m => moves.push(m));
+
 	return moves;
 }

@@ -1,7 +1,6 @@
 import { Bugs } from "../mechanics/pieceTypes";
 import { Util } from "../util";
 import { Vec } from "../vec";
-import { Slot } from "./slot";
 
 export class Piece {
 
@@ -19,6 +18,23 @@ export class Piece {
 	
 	public drag = false;
 
+	public static ORDER = [
+		new Vec(1, -1),
+		new Vec(1, 0),
+		new Vec(0, 1),
+		new Vec(-1, 1),
+		new Vec(-1, 0),
+		new Vec(0, -1),
+	];
+
+	static forSurrounding(pos: Vec, cb: (pos: Vec, idx: number, dir: Vec) => boolean | void) {
+		let i = 0;
+		for (let v of this.ORDER) {
+			if (cb(new Vec(pos.x + v.x, pos.y + v.y), i++, v.clone())) {
+				return;
+			}
+		}
+	}
 
 	constructor(
 		public player: number,
@@ -32,7 +48,7 @@ export class Piece {
 	}
 
 	forSurrounding(cb: (pos: Vec, idx: number, dir: Vec) => boolean | void) {
-		Slot.forSurrounding(this.axial, cb);
+		Piece.forSurrounding(this.axial, cb);
 	}
 
 	equals(other: Piece) {

@@ -3,10 +3,12 @@ import { Rand } from "../random";
 import { Vec } from "../vec";
 import { Piece } from "./piece";
 import { PiecePool } from "./pool";
-import { Slot } from "./slot";
 import { Move } from "../mechanics/moves";
 
 export class Board {
+
+	public ORDER!: number[];
+	public winner?: number;
 
 	public turn = 0;
 	public currentPlayer = 0;
@@ -28,6 +30,16 @@ export class Board {
 
 		if (clone) { return; }
 		(window as any)["board"] = this;
+
+		this.ORDER = [
+			1 - this.size,
+			1,
+			this.size,
+			this.size - 1,
+			-1,
+			-this.size
+		];
+
 		this.reset();
 	}
 
@@ -66,7 +78,7 @@ export class Board {
 			lastDir = dirNum;
 
 			// Get the axial vec of the chosen direction
-			let dir = Slot.ORDER[dirNum];
+			let dir = Piece.ORDER[dirNum];
 
 			// Keep going in that direction until there's an empty space
 			do { pos.add(dir); }
@@ -89,6 +101,32 @@ export class Board {
 
 	public forEachBottom(cb: (tile: Piece, i: number) => void) {
 		this.pieces.forEach((p, i) => { if (p.level === 0) cb(p, i) });
+	}
+
+	public forSurroundingPieces(axial: Vec, cb: (piece: Piece, idx: number, dir: Vec) => boolean | void) {
+		let root = axial.index(this.size);
+		for (let i = 0; i < this.ORDER.length; i++) {
+			let piece = this.map.get(root + this.ORDER[i]);
+			if (piece) {
+				while (piece.parent) {
+					piece = piece.parent;
+				}
+				if (cb(piece, i, Piece.ORDER[i])) {
+					break;
+				}
+			}
+		}
+	}
+
+	public forSurroundingSlots(axial: Vec, cb: (axial: Vec, idx: number, dir: Vec) => boolean | void) {
+		let root = axial.index(this.size);
+		for (let i = 0; i < this.ORDER.length; i++) {
+			if (!this.map.has(root + this.ORDER[i])) {
+				if (cb(Vec.add(axial, Piece.ORDER[i]), i, Piece.ORDER[i]) === true) {
+					break;
+				}
+			}
+		}
 	}
 
 	private findArticulationPoints() {
@@ -153,7 +191,7 @@ export class Board {
 		}
 	}
 
-	public applyMove(move: Move) {
+	public applyMove(move: Move): boolean {
 		let piece: Piece;
 		if (move.src) {
 			this.move(move.src, move.dest);
@@ -162,18 +200,48 @@ export class Board {
 			this.placePiece(piece, move.dest);
 		}
 
-		//TODO: check if we moved next to a queen, and if so, is that queen surrounded?
+		// Check for win
+		let lost = 0;
+		for (const player in this.bees) {
+			const bee = this.bees[player];
+			if (bee) {
+				let open = false;
+				this.forSurroundingSlots(bee.axial, () => {
+					open = true;
+					return false;
+				});
+				if (!open) {
+					lost++;
+					this.winner = 1 - +player;
+				}
+			}
+		}
+
+		// Draw
+		if (lost) {
+			if (lost === this.players) {
+				this.winner = -1;
+			}
+			console.log("Game Over", this.winner);
+			return true;
+		}
 
 		this.nextTurn();
 		this.findArticulationPoints();
+		
+		return false;
 	}
 
 	public beeDown(player = this.currentPlayer) {
 		return this.bees[player];
 	}
 
+	has(axial: Vec): boolean {
+		return this.map.has(axial.index(this.size));
+	}
+
 	get(axial: Vec): Piece | undefined {
-		let piece = this.map.get(axial.x + axial.y * this.size);
+		let piece = this.map.get(axial.index(this.size));
 		if (piece) {
 			while (piece.parent) {
 				piece = piece.parent;
@@ -181,6 +249,14 @@ export class Board {
 		}
 		return piece;
 	}
+
+	public tmpRemove(piece: Piece) {
+		if (piece.level !== 0) { throw new Error("Only works on ground pieces"); }
+		const idx = piece.axial.index(this.size);
+		this.map.delete(idx);
+		return () => { this.map.set(idx, piece); }
+	}
+
 
 	private move(src: Vec, dest: Vec) {
 		let piece = this.map.get(src.index(this.size)) as Piece;
@@ -225,10 +301,15 @@ export class Board {
 	}
 
     clone(): Board {
+		if (this.winner !== undefined) {
+			throw new Error("Don't clone won boards");
+		}
+
         const board = new Board(this.players, true);
 
 		board.turn = this.turn;
 		board.currentPlayer = this.currentPlayer;
+		board.ORDER = this.ORDER;
 
 		// Clone all bottom pieces and anything stacked on top
 		// maintaining the relationships

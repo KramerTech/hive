@@ -125,7 +125,7 @@ export class Graphics {
 		g.lineWidth = Var.PIECE_STROKE;
 		const canHover = piece.drag || piece.axial.equals(Env.hex) && !Env.movingTile;
 		do {
-			const hover = canHover && !piece.parent && piece.player === this.board.currentPlayer;
+			const hover = canHover && !piece.parent && (!Env.validate || piece.player === this.board.currentPlayer);
 
 			g.save();
 			Draw.piece(piece, g, hover, piece.parent === undefined);

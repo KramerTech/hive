@@ -1,8 +1,5 @@
-import { getBestMoveSparse } from "../ai/evaluator";
 import { Board } from "../state/board";
-import { Env } from "../state/env";
 import { Piece } from "../state/piece";
-import { Slot } from "../state/slot";
 import { Vec } from "../vec";
 import { PieceMoves } from "./pieceMoves";
 import { Bugs } from "./pieceTypes";
@@ -44,11 +41,9 @@ export class Moves {
 			valids = this.getPlaceable(board);
 		}
 
-		if (!Env.validate || this.moveValid(move, valids)) {
+		if (this.moveValid(move, valids)) {
 			board.applyMove(move);
 			
-			// TODO Check gameover
-
 			// TODO: cache allmoves to avoid double work for evaluator
 			const allMoves = this.getAllMoves(board);
 
@@ -56,9 +51,9 @@ export class Moves {
 				console.log("No moves for", board.currentPlayer ? "black" : "white");
 				board.nextTurn();
 			} else if (human) {
-				console.log(this.getAllMoves(board));
-				console.log("AI Moving");
-				this.make(board, getBestMoveSparse(board, 5, 4));
+				// console.log(this.getAllMoves(board));
+				// console.log("AI Moving");
+				// this.make(board, getBestMoveSparse(board, 5, 4));
 				//this.make(board, getBestMove(board, 3));
 			}
 
@@ -107,28 +102,27 @@ export class Moves {
 		if (board.turn === 0) {
 			return Moves.FIRST_MOVE;
 		} else if (board.turn === 1) {
-			return Slot.ORDER;
+			return Piece.ORDER;
 		}
 
 		const moves: Map<string, Vec> = new Map();
 
-		board.forEachTop(p => {
-			if (p.player === player) {
-				p.forSurrounding(pos => {
-					if (board.get(pos)) { return; }
-					let flag = false;
-					Slot.forSurrounding(pos, bordering => {
-						let bp = board.get(bordering)
-						if (bp && bp.player !== player) {
-							flag = true;
-						}
-					});
-					if (!flag) {
-						moves.set(pos.x + pos.y * 10000 + '', pos);
-					}
-				});
-			}
+		// Get all slots touching my pieces
+		board.forEachTop(piece => {
+			if (piece.player !== player) { return; }
+			board.forSurroundingSlots(piece.axial, pos => {
+				moves.set(pos.toString(), pos);
+			});
 		});
+
+		// Remove all slots touching your pieces
+		board.forEachTop(piece => {
+			if (piece.player === player) { return; }
+			board.forSurroundingSlots(piece.axial, pos => {
+				moves.delete(pos.toString());
+			});
+		});
+
 		return Array.from(moves.values());
 	}
 
