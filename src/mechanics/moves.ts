@@ -1,11 +1,11 @@
+import { getBestMoveSparse } from "../ai/evaluator";
 import { Board } from "../state/board";
-import { Vec } from "../vec";
-import { Bugs } from "./pieceTypes";
+import { Env } from "../state/env";
 import { Piece } from "../state/piece";
 import { Slot } from "../state/slot";
-import { Env } from "../state/env";
-import { getBestMove } from "../ai/evaluator";
+import { Vec } from "../vec";
 import { PieceMoves } from "./pieceMoves";
+import { Bugs } from "./pieceTypes";
 
 export class Move {
 	constructor(
@@ -56,9 +56,10 @@ export class Moves {
 				console.log("No moves for", board.currentPlayer ? "black" : "white");
 				board.nextTurn();
 			} else if (human) {
-				// console.log(this.getAllMoves(board));
-				// console.log("AI Moving");
-				// this.make(board, getBestMove(board, 2));
+				console.log(this.getAllMoves(board));
+				console.log("AI Moving");
+				this.make(board, getBestMoveSparse(board, 5, 4));
+				//this.make(board, getBestMove(board, 3));
 			}
 
 			return true;

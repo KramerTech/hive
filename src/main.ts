@@ -1,9 +1,8 @@
+import { getBestMove } from "./ai/evaluator";
+import { Moves } from "./mechanics/moves";
+import { Board } from "./state/board";
 import { Graphics } from "./ui/graphics";
 import { Input } from "./ui/input";
-import { Moves } from "./mechanics/moves";
-import { getBestMove } from "./ai/evaluator";
-import { Board } from "./state/board";
-import { PiecePool } from "./state/pool";
 
 export class Main {
 
@@ -30,6 +29,10 @@ export class Main {
 			console.log(move);
 			Moves.make(this.game, move);
 		}
+
+		// for (let i = 0; i < 9; i++) {
+		// 	(window as any).ai(2);
+		// }
 	}
 
 	public nextTurn() {

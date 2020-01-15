@@ -106,3 +106,62 @@ export function getBestMove(board: Board, depth: number): Move {
     });
     return minMove as Move;
 }
+
+export function evaluateDepthSparse(board: Board, max: number, depth: number): number {
+    if (depth === 0) {
+        return evaluate(board);
+    }
+    const moves = Moves.getAllMoves(board);
+    let min = board.currentPlayer === 0 ? -10000 : 10000;
+
+    const sortMoves = moves.map(move => {
+        const newBoard = board.clone();
+        Moves.make(newBoard, move);
+        let v = evaluate(newBoard);
+        return {move: move, board: newBoard, value: v};
+    });
+    sortMoves.sort((a, b) => a.value - b.value);
+    if (board.currentPlayer === 0) {
+        sortMoves.reverse();
+    }
+    const topMoves = sortMoves.slice(0, max)
+
+    topMoves.forEach(move => {
+        let v = move.value;
+        if (move.value < 500 && move.value > -500 && depth > 1) {
+            v = evaluateDepthSparse(move.board, max, depth - 1);
+        }
+        if (board.currentPlayer === 0) {
+            min = Math.max(min, v);
+        } else {
+            min = Math.min(min, v);
+        }
+    });
+    return min;
+}
+
+export function getBestMoveSparse(board: Board, max: number, depth: number): Move {
+    const moves = Moves.getAllMoves(board);
+    let min = board.currentPlayer === 0 ? -10000 : 10000;
+    let minMove: Move | undefined;
+
+    moves.sort(() => Math.random() - .5);
+
+    moves.forEach(move => {
+        const newBoard = board.clone();
+        newBoard.applyMove(move);
+        let v = evaluateDepthSparse(newBoard, max, depth - 1);
+        if (board.currentPlayer === 0) {
+            if (v > min) {
+                min = v;
+                minMove = move;
+            }
+        } else {
+            if (v < min) {
+                min = v;
+                minMove = move;
+            }
+        }
+    });
+    return minMove as Move;
+}
