@@ -17,6 +17,9 @@ export class Move {
 }
 
 export class Moves {
+
+	static FIRST_MOVE = [new Vec()];
+
 	static make(board: Board, move: Move, human?: boolean): boolean {
 		if (move.player !== board.currentPlayer) { return false; }
 		
@@ -114,7 +117,7 @@ export class Moves {
 	 */
 	static getPlaceable(board: Board, player = board.currentPlayer): Vec[] {
 		if (board.turn === 0) {
-			return [Vec.ZERO];
+			return Moves.FIRST_MOVE;
 		} else if (board.turn === 1) {
 			return Slot.ORDER;
 		}
