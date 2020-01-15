@@ -104,9 +104,7 @@ export class Input {
 				Input.moveDelta.set(Env.world).sub(piece.cart)
 			}
 		} else {
-			if (!piece.artPoint) {
-				Env.pieceMoves = PieceMoves.get(this.board, piece).map(move => Util.axialToCartesian(move));
-			}
+			Env.pieceMoves = PieceMoves.get(this.board, piece).map(move => Util.axialToCartesian(move));
 			Env.dragStart.set(Env.world).sub(piece.cart);
 		}
 		Env.movingTile = piece;

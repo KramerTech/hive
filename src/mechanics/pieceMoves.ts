@@ -11,6 +11,10 @@ export class PieceMoves {
 	static getters = {} as {[key in Bugs]: MoveGetter};
 
 	static get(board: Board, piece: Piece, bug: Bugs = piece.bug): Vec[] {
+		// Disjoint graphs check
+		// Can safely be ignored if moving a stacked piece
+		if (piece.artPoint && piece.level === 0) { return []; }
+		// Can only move after placing bee
 		if (!board.beeDown(piece.player)) return [];
 		return this.getters[bug](board, piece) as Vec[];
 	}
@@ -143,16 +147,16 @@ PieceMoves.getters[Bugs.MOSQUITO] = (board, piece) => {
 	}
 
 	const moves: Map<string, Vec> = new Map();
-	const checked: {[key: string]: boolean} = {};
+	const checked = new Set<Bugs>();
 
 	// Mark mosquito as already checked so we don't get into an infinte loop
-	checked[Bugs.MOSQUITO] = true;
+	checked.add(Bugs.MOSQUITO);
 	
 	// For each piece we're touching, acquire that piece's moves
 	piece.forSurrounding(pos => {
 		const check = board.get(pos);
-		if (check && !checked[check.bug]) {
-			checked[check.bug] = true;
+		if (check && !checked.has(check.bug)) {
+			checked.add(check.bug);
 			const newMoves = PieceMoves.get(board, piece, check.bug);
 			newMoves.forEach(m => moves.set(m.toString(), m));
 		}

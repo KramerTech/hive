@@ -43,6 +43,12 @@ export class Piece {
 		let piece = new Piece(this.player, this.bug);
 		piece.artPoint = this.artPoint;
 		piece.axial = this.axial;
+
+		// Recursively clone stacked pieces
+		if (this.parent) {
+			piece.parent = this.parent.clone();
+		}
+
 		return piece;
 	}
 

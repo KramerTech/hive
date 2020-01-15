@@ -37,13 +37,6 @@ export class Moves {
 
 		let valids;
 		if (move.src) {
-			// Disjoint graphs check
-			// Can safely be ignored if moving a stacked piece
-			if (piece.level === 0 && Env.validate && piece.artPoint) {
-				console.log("Hive break");
-				return false;	
-			}
-
 			// Find valid moves for the given bug type
 			valids = PieceMoves.get(board, piece);
 		} else {
@@ -63,9 +56,9 @@ export class Moves {
 				console.log("No moves for", board.currentPlayer ? "black" : "white");
 				board.nextTurn();
 			} else if (human) {
-				console.log(this.getAllMoves(board));
-				console.log("AI Moving");
-				this.make(board, getBestMove(board, 2));
+				// console.log(this.getAllMoves(board));
+				// console.log("AI Moving");
+				// this.make(board, getBestMove(board, 2));
 			}
 
 			return true;
@@ -88,19 +81,13 @@ export class Moves {
 	static getAllMoves(board: Board, player = board.currentPlayer): Move[] {
 		const moves: Move[] = [];
 
-		// We cannot move pieces until our bee is down
-		if (board.beeDown(player)) {
-			// Get all moves for every piece
-			board.forEachTop(piece => {
-				// Not your turn
-				if (piece.player !== player) { return; }
-				// Breaks the hive
-				if (piece.artPoint) { return; }
-
-				const dests = PieceMoves.get(board, piece);
-				moves.push(...dests.map(move => new Move(player, piece.bug, move, piece.axial)));
-			});
-		}
+		// Get all moves for every piece
+		board.forEachTop(piece => {
+			// Not your turn
+			if (piece.player !== player) { return; }
+			const dests = PieceMoves.get(board, piece);
+			moves.push(...dests.map(move => new Move(player, piece.bug, move, piece.axial)));
+		});
 
 		const dests = this.getPlaceable(board, player) as Vec[];
 		for (const bug of board.currentPool().bugs(board.turn)) {

@@ -233,22 +233,15 @@ export class Board {
 		// Clone all bottom pieces and anything stacked on top
 		// maintaining the relationships
 		this.forEachBottom(piece => {
-			let clone = piece.clone();
-			board.pieces.push(clone);
-
+			piece = piece.clone();
 			if (piece.bug === Bugs.QUEEN) {
-				board.bees[piece.player] = clone;
+				board.bees[piece.player] = piece;
 			}
-
-			while (piece.parent) {
-				piece = piece.parent;
-				clone.parent = piece.clone();
-				clone = clone.parent;
-				board.pieces.push(clone);
+			board.map.set(piece.axial.index(this.size), piece);
+			while (piece) {
+				board.pieces.push(piece);
+				piece = piece.parent as Piece;
 			}
-
-			const axial = clone.axial;
-			board.map.set(axial.x + axial.y * this.size, clone);
 		});
 
 		for (const pool of this.pools) {
