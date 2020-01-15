@@ -31,7 +31,6 @@ export function evaluate(board: Board) {
             }
         });
     } else {
-        score -= 1;
     }
     if (bbee.length === 1) {
         let moves = Moves.getAllMoves(board, 0);
@@ -52,7 +51,6 @@ export function evaluate(board: Board) {
             }
         });
     } else {
-        score += 1;
     }
     if (wOpen === 0 && bOpen === 0) {
         return 0;

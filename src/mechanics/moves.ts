@@ -58,7 +58,7 @@ export class Moves {
 			} else if (human) {
 				console.log(this.getAllMoves(board));
 				console.log("AI Moving");
-				this.make(board, getBestMove(board, 3));
+				this.make(board, getBestMove(board, 2));
 			}
 			//const moves = this.getAllMoves(board);
 			//console.log(moves.length, moves);
