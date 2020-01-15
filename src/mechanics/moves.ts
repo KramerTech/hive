@@ -3,6 +3,7 @@ import { Piece } from "../state/piece";
 import { Vec } from "../vec";
 import { PieceMoves } from "./pieceMoves";
 import { Bugs } from "./pieceTypes";
+import { getBestMoveSparse } from "../ai/evaluator";
 
 export class Move {
 	constructor(
@@ -52,8 +53,10 @@ export class Moves {
 				board.nextTurn();
 			} else if (human) {
 				// console.log(this.getAllMoves(board));
-				// console.log("AI Moving");
-				// this.make(board, getBestMoveSparse(board, 5, 4));
+				console.log("AI Moving");
+				if (this.make(board, getBestMoveSparse(board, 5, 4))) {
+					console.log("Game Over", board.winner);
+				};
 				//this.make(board, getBestMove(board, 3));
 			}
 

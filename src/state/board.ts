@@ -222,7 +222,6 @@ export class Board {
 			if (lost === this.players) {
 				this.winner = -1;
 			}
-			console.log("Game Over", this.winner);
 			return true;
 		}
 
