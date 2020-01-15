@@ -43,7 +43,10 @@ export class Moves {
 		}
 
 		if (this.moveValid(move, valids)) {
-			board.applyMove(move);
+			if (board.applyMove(move)) {
+				console.log("Game Over", board.winner);
+				return true;
+			};
 			
 			// TODO: cache allmoves to avoid double work for evaluator
 			const allMoves = this.getAllMoves(board);
@@ -54,9 +57,7 @@ export class Moves {
 			} else if (human) {
 				// console.log(this.getAllMoves(board));
 				console.log("AI Moving");
-				if (this.make(board, getBestMoveSparse(board, 5, 4))) {
-					console.log("Game Over", board.winner);
-				};
+				this.make(board, getBestMoveSparse(board, 5, 4));
 				//this.make(board, getBestMove(board, 3));
 			}
 
@@ -79,6 +80,8 @@ export class Moves {
 	
 	static getAllMoves(board: Board, player = board.currentPlayer): Move[] {
 		const moves: Move[] = [];
+
+		if (board.winner) { return moves; }
 
 		// Get all moves for every piece
 		board.forEachTop(piece => {
