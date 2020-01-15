@@ -8,39 +8,29 @@ import { Move } from "../mechanics/moves";
 
 export class Board {
 
-	public offset: number;
-
 	public turn = 0;
 	public currentPlayer = 0;
 
-	private grid: Slot[] = [];
+	private size: number;
+
 	private pieces: Piece[] = [];
-	
-	public pools: PiecePool[] = [];
-	public bees: {[player: number]: Piece} = {};
+	private pools: PiecePool[] = [];
+	private map = new Map<number, Piece>();
+	private bees: {[player: number]: Piece} = {};
 
 	private time = 0;
 
 	constructor(
 		public players: number,
-		public width: number,
-		public height: number,
 		clone?: boolean,
 	) {
-		this.offset = Math.floor(this.height / 2) * this.width + Math.floor(this.width / 2);
+		this.size = this.players * PiecePool.TOTAL;
+
 		if (clone) { return; }
 		(window as any)["board"] = this;
 		this.reset();
 	}
 
-	// private rotate(tile: Tile) {
-	// 	for (let r = 1; r < 6; r++) {
-	// 		let newAxial = Util.cartesianToAxial(Vec.rotate(tile.cart, Util.degToRad(r * 60)));
-	// 		let player = (tile.player + 1) % this.players;
-	// 		this.set(newAxial, new Tile(newAxial, player, r));
-	// 	}
-	// }
-	
 	public reset() {
 		this.turn = 0;
 		this.currentPlayer = 0;
@@ -48,7 +38,7 @@ export class Board {
 		this.bees = {};
 		this.pools = [];
 		this.pieces = [];
-		this.grid = new Array(this.width * this.height).fill(1).map(() => new Slot());
+		this.map = new Map<number, Piece>();
 
 		for (let i = 0; i < this.players; i++) {
 			this.pools.push(new PiecePool(i));
@@ -93,11 +83,15 @@ export class Board {
 		this.findArticulationPoints();
 	}
 
-	public forEachPiece(cb: (tile: Piece, i: number) => void) {
-		this.pieces.forEach(cb);
+	public forEachTop(cb: (tile: Piece, i: number) => void) {
+		this.pieces.forEach((p, i) => { if (!p.parent) cb(p, i) });
 	}
 
-	findArticulationPoints() {
+	public forEachBottom(cb: (tile: Piece, i: number) => void) {
+		this.pieces.forEach((p, i) => { if (p.level === 0) cb(p, i) });
+	}
+
+	private findArticulationPoints() {
 		if (!this.pieces.length) { return; }
 		this.pieces.forEach(p => {
 			p.artPoint = false;
@@ -113,7 +107,7 @@ export class Board {
 	}
 
 	// Based on https://en.wikipedia.org/wiki/Biconnected_component
-	articulationDFS(piece: Piece, parent?: Piece) {
+	private articulationDFS(piece: Piece, parent?: Piece) {
 		piece.visited = true;
 		piece.tin = this.time++;
 		piece.low = piece.tin;
@@ -140,7 +134,7 @@ export class Board {
 		}
 	}
 
-    getPiecesByType(bug: Bugs, player: number) {
+    public getPiecesByType(bug: Bugs, player: number) {
         let pieces = [];
         for (const piece of this.pieces) {
 			if (piece.bug === bug && piece.player === player) {
@@ -150,21 +144,19 @@ export class Board {
         return pieces;
     }
 
-    placePiece(piece: Piece, dest: Vec) {
+    public placePiece(piece: Piece, dest: Vec) {
 		this.pieces.push(piece);
 		piece.update(dest);
-		this.getSlot(dest).pushPiece(piece);
+		this.put(piece);
 		if (piece.bug === Bugs.QUEEN) {
 			this.bees[piece.player] = piece;
 		}
 	}
 
-	move(move: Move) {
+	public applyMove(move: Move) {
 		let piece: Piece;
 		if (move.src) {
-			piece = this.getSlot(move.src).popPiece() as Piece;
-			this.getSlot(move.dest).pushPiece(piece);
-			piece.update(move.dest);
+			this.move(move.src, move.dest);
 		} else {
 			piece = this.currentPool().use(move.bug);
 			this.placePiece(piece, move.dest);
@@ -176,19 +168,50 @@ export class Board {
 		this.findArticulationPoints();
 	}
 
-	get(axial: Vec): Piece | undefined {
-		const slot = this.getSlot(axial);
-		if (slot) { return slot.getTop(); }
+	public beeDown(player = this.currentPlayer) {
+		return this.bees[player];
 	}
 
-	getSlot(axial: Vec): Slot {
-		const idx = this.offset + axial.x + axial.y * this.width;
-		if (idx < 0 || idx > this.grid.length) {
-			//TODO: enlarge grid?
-			console.log("BAD SLOT", axial);
-			return new Slot();
+	get(axial: Vec): Piece | undefined {
+		let piece = this.map.get(axial.x + axial.y * this.size);
+		if (piece) {
+			while (piece.parent) {
+				piece = piece.parent;
+			}
 		}
-		return this.grid[idx];
+		return piece;
+	}
+
+	private move(src: Vec, dest: Vec) {
+		let piece = this.map.get(src.index(this.size)) as Piece;
+		if (piece.parent) {
+			// Get second to last in stack
+			while (piece.parent && piece.parent.parent) {
+				piece = piece.parent;
+			}
+
+			// Remove pointer and then work with top
+			let tmp = piece.parent as Piece;
+			delete piece.parent;
+			piece = tmp;
+		} else {
+			this.map.delete(src.index(this.size));
+		}
+
+		piece.update(dest);
+		this.put(piece);
+	}
+
+	put(piece: Piece) {
+		const existing = this.get(piece.axial);
+		if (existing) {
+			existing.parent = piece;
+			piece.level = existing.level + 1;
+		} else {
+			piece.level = 0;
+			const axial = piece.axial;
+			this.map.set(axial.x + axial.y * this.size, piece);
+		}
 	}
 
 	nextTurn() {
@@ -202,26 +225,31 @@ export class Board {
 	}
 
     clone(): Board {
-        const board = new Board(
-			this.players,
-			this.width,
-			this.height,
-			true,
-		);
+        const board = new Board(this.players, true);
 
 		board.turn = this.turn;
 		board.currentPlayer = this.currentPlayer;
 
-		for (const slot of this.grid) {
-			const clone = slot.clone();
-			board.grid.push(clone);
-			for (const piece of clone.stack) {
-				board.pieces.push(piece);
-				if (piece.bug === Bugs.QUEEN) {
-					board.bees[piece.player] = piece;
-				}
+		// Clone all bottom pieces and anything stacked on top
+		// maintaining the relationships
+		this.forEachBottom(piece => {
+			let clone = piece.clone();
+			board.pieces.push(clone);
+
+			if (piece.bug === Bugs.QUEEN) {
+				board.bees[piece.player] = clone;
 			}
-		}
+
+			while (piece.parent) {
+				piece = piece.parent;
+				clone.parent = piece.clone();
+				clone = clone.parent;
+				board.pieces.push(clone);
+			}
+
+			const axial = clone.axial;
+			board.map.set(axial.x + axial.y * this.size, clone);
+		});
 
 		for (const pool of this.pools) {
 			board.pools.push(pool.clone());
@@ -229,24 +257,5 @@ export class Board {
 
 		return board;
 	}
-	
-	toString() {
-        let str = [];
-        for (let i = this.height - 1; i >= 0; i--) {
-            for (let j = 0; j < this.height - i; j++) {
-                str.push(' ');
-            }
-            for (let j = 0; j < this.width; j++) {
-                let topPiece = this.grid[j + this.width * i].getTop();
-                if (topPiece) {
-                    str.push(topPiece.player + topPiece.bug[0]);
-                } else {
-                    str.push('. ');
-                }
-            }
-            str.push('\n');
-        }
-        return str.join('');
-    }
 
 }

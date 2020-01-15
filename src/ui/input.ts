@@ -80,8 +80,8 @@ export class Input {
 		// Right click cycles through available bugs
 		if (Env.movingTile) {
 			this.pickCycle++;
-			this.pickCycle %= bugs.length;
 		}
+		this.pickCycle %= bugs.length;
 
 		this.dragPiece(pool.get(bugs[this.pickCycle]), true);
 	}
@@ -114,7 +114,7 @@ export class Input {
 	}
 	
 	private pickup(): boolean {
-		let piece = this.board.getSlot(Env.hex).getTop();
+		let piece = this.board.get(Env.hex);
 
 		if (Env.movingTile) { return true; }
 		if (!piece || piece.player !== this.board.currentPlayer) { return false; }

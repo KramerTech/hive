@@ -49,7 +49,7 @@ export class Moves {
 		}
 
 		if (!Env.validate || this.moveValid(move, valids)) {
-			board.move(move);
+			board.applyMove(move);
 			
 			// TODO Check gameover
 
@@ -60,12 +60,10 @@ export class Moves {
 				console.log("No moves for", board.currentPlayer ? "black" : "white");
 				board.nextTurn();
 			} else if (human) {
-				console.log(this.getAllMoves(board));
-				console.log("AI Moving");
-				this.make(board, getBestMove(board, allMoves.length > 42 ? 2 : 3));
+				// console.log(this.getAllMoves(board));
+				// console.log("AI Moving");
+				// this.make(board, getBestMove(board, allMoves.length > 42 ? 2 : 3));
 			}
-			//const moves = this.getAllMoves(board);
-			//console.log(moves.length, moves);
 
 			return true;
 		} else {
@@ -88,15 +86,13 @@ export class Moves {
 		const moves: Move[] = [];
 
 		// We cannot move pieces until our bee is down
-		if (board.bees[player]) {
+		if (board.beeDown(player)) {
 			// Get all moves for every piece
-			board.forEachPiece(piece => {
+			board.forEachTop(piece => {
 				// Not your turn
 				if (piece.player !== player) { return; }
 				// Breaks the hive
 				if (piece.artPoint) { return; }
-				// Hidden under something
-				if (board.get(piece.axial) !== piece) { return }
 
 				const dests = PieceMoves.get(board, piece);
 				moves.push(...dests.map(move => new Move(player, piece.bug, move, piece.axial)));
@@ -125,7 +121,7 @@ export class Moves {
 
 		const moves: Map<string, Vec> = new Map();
 
-		board.forEachPiece(p => {
+		board.forEachTop(p => {
 			if (p.player === player) {
 				p.forSurrounding(pos => {
 					if (board.get(pos)) { return; }

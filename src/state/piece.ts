@@ -5,6 +5,8 @@ import { Slot } from "./slot";
 
 export class Piece {
 
+	public parent?: Piece;
+
 	public artPoint = false;
 	public visited = false;
 	
@@ -16,6 +18,7 @@ export class Piece {
 	public level = 0;
 	
 	public drag = false;
+
 
 	constructor(
 		public player: number,

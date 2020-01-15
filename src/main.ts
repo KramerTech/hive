@@ -22,8 +22,7 @@ export class Main {
 	}
 
 	public newGame(players: number) {
-		const size = PiecePool.TOTAL * players;
-		this.game = new Board(players, size, size);
+		this.game = new Board(players);
 		this.setGame();
 
 		(window as any)["ai"] = (depth: number) => {

@@ -92,7 +92,7 @@ export function getBestMove(board: Board, depth: number): Move {
     let minMove: Move | undefined;
     moves.forEach(move => {
         const newBoard = board.clone();
-        Moves.make(newBoard, move);
+        newBoard.applyMove(move);
         let v = evaluateDepth(newBoard, depth - 1);
         if (board.currentPlayer === 0) {
             if (v > min) {
