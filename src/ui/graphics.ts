@@ -123,10 +123,10 @@ export class Graphics {
 		g.save();
 		g.translate(piece.cart.x, piece.cart.y);
 		g.lineWidth = Var.PIECE_STROKE;
-
-		let hover = this.board.currentPlayer === piece.player && (piece.drag || piece.axial.equals(Env.hex) && !Env.movingTile);
-
+		const canHover = piece.drag || piece.axial.equals(Env.hex) && !Env.movingTile;
 		do {
+			const hover = canHover && !piece.parent && piece.player === this.board.currentPlayer;
+
 			g.save();
 			Draw.piece(piece, g, hover, piece.parent === undefined);
 			g.restore();

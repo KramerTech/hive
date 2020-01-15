@@ -11,7 +11,7 @@ export class PieceMoves {
 	static getters = {} as {[key in Bugs]: MoveGetter};
 
 	static get(board: Board, piece: Piece, bug: Bugs = piece.bug): Vec[] {
-		if (!board.bees[piece.player]) return [];
+		if (!board.beeDown(piece.player)) return [];
 		return this.getters[bug](board, piece) as Vec[];
 	}
 
