@@ -1,17 +1,23 @@
-import { Bug } from "../mechanics/pieceTypes";
+import { Bugs } from "../mechanics/pieceTypes";
 import { Piece } from "./piece";
 import { Vec } from "../vec";
 
 const ALLOC: {[key: string]: number} = {};
-ALLOC[Bug.Q] = 1;
-ALLOC[Bug.L] = 1;
-ALLOC[Bug.M] = 1;
-ALLOC[Bug.B] = 2;
-ALLOC[Bug.S] = 2;
-ALLOC[Bug.A] = 3;
-ALLOC[Bug.G] = 3;
+ALLOC[Bugs.QUEEN] = 1;
+ALLOC[Bugs.LADY] = 1;
+ALLOC[Bugs.MOSQUITO] = 1;
+ALLOC[Bugs.BEETLE] = 2;
+ALLOC[Bugs.SPIDER] = 2;
+ALLOC[Bugs.ANT] = 3;
+ALLOC[Bugs.HOPPER] = 3;
 
 export class PiecePool {
+
+	public static TOTAL = function() {
+		let sum = 0;
+		for (const count of Object.values(ALLOC)) { sum += count; }
+		return sum;
+	}();
 
 	public pools: {[key: string]: Piece[]} = {}
 
@@ -26,7 +32,7 @@ export class PiecePool {
 		} else {
 			for (const bug in ALLOC) {
 				this.pools[bug] = new Array(ALLOC[bug]).fill(1).map(() => {
-					const piece = new Piece(player, bug as Bug);
+					const piece = new Piece(player, bug as Bugs);
 					piece.update(Vec.ZERO);
 					piece.level = -1;
 					return piece;
@@ -35,27 +41,27 @@ export class PiecePool {
 		}
     }
 
-    has(bug: Bug) {
+    has(bug: Bugs) {
         return this.pools[bug].length > 0;
 	}
 	
-	get(bug: Bug): Piece {
+	get(bug: Bugs): Piece {
 		return this.pools[bug][0];
 	}
 
-    use(bug: Bug): Piece {
+    use(bug: Bugs): Piece {
 		return (this.pools[bug].shift() as Piece).clone() as Piece;
 	}
 	
-	bugs(turn: number): Bug[] {
-		const bugs: Bug[] = [];
+	bugs(turn: number): Bugs[] {
+		const bugs: Bugs[] = [];
 		
 		// The bee must be placed by the 4th move
-		if (Math.floor(turn / 2) === 3 && this.has(Bug.Q)) { return [Bug.Q]; }
+		if (Math.floor(turn / 2) === 3 && this.has(Bugs.QUEEN)) { return [Bugs.QUEEN]; }
 
 		for (const bug in this.pools) {
 			if (this.pools[bug].length > 0) {
-				bugs.push(bug as Bug);
+				bugs.push(bug as Bugs);
 			}
 		}
 		return bugs;

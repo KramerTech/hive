@@ -198,4 +198,8 @@ export class Vec {
 		return this.x + " " + this.y;
 	}
 
+	index(size: number) {
+		return this.x + this.y * size;
+	}
+
 }

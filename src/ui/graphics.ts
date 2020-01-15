@@ -10,8 +10,6 @@ import { Util } from "../util";
 
 export class Graphics {
 
-	private size!: Vec;
-
 	private g!: CanvasRenderingContext2D;
 	private canvas!: HTMLCanvasElement;
 
@@ -24,15 +22,9 @@ export class Graphics {
 		window.addEventListener("resize", this.resize.bind(this));
 		document.addEventListener('contextmenu', e => e.preventDefault());
 
-		this.gameUpdated();
-
 		this.setCanvas();
 		this.slideCenter();
 		this.tick();
-	}
-
-	gameUpdated() {
-		this.size = new Vec(this.board.width, this.board.height);
 	}
 
 	tick() {
@@ -77,7 +69,7 @@ export class Graphics {
 		g.translate(Env.slide.x, Env.slide.y);
 		g.scale(Env.scale, Env.scale);
 
-		this.board.forEachPiece(tile => {
+		this.board.forEachBottom(tile => {
 			if (tile !== Env.movingTile) {
 				this.drawTile(g, tile);
 			}
@@ -87,6 +79,7 @@ export class Graphics {
 
 		// Draw any piece that you're dragging on top of all the other pieces
 		if (Env.movingTile) {
+			g.translate(Input.moveDelta.x, Input.moveDelta.y);
 			this.drawTile(g, Env.movingTile);
 		}
 
@@ -127,36 +120,20 @@ export class Graphics {
 	}
 
 	private drawTile(g: CanvasRenderingContext2D, piece: Piece) {
-		let stack: Piece[];
-		if (piece.level < 0) {
-			// Potential piece (not actually placed yet)
-			stack = [piece];
-		} else {
-			const slot = this.board.getSlot(piece.axial);
-			if (piece.level !== slot.size() - 1) { return; }
-			stack = slot.stack;
-		}
-
 		g.save();
 		g.translate(piece.cart.x, piece.cart.y);
 		g.lineWidth = Var.PIECE_STROKE;
 
 		let hover = this.board.currentPlayer === piece.player && (piece.drag || piece.axial.equals(Env.hex) && !Env.movingTile);
 
-		for (const piece of stack) {
+		do {
 			g.save();
-			if (piece === Env.movingTile) {
-				g.translate(Input.moveDelta.x, Input.moveDelta.y);
-			}
-
-			const top = piece.level === stack.length - 1 || piece.level < 0;
-			
-			piece.draw(g);
-			Draw.piece(piece, g, hover, top);
+			Draw.piece(piece, g, hover, piece.parent === undefined);
 			g.restore();
 
 			g.translate(Var.STACK_OFF.x, Var.STACK_OFF.y);
-		}
+			piece = piece.parent as Piece;
+		} while (piece && piece !== Env.movingTile)
 
 		g.restore();
 	}

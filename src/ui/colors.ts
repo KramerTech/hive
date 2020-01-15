@@ -1,4 +1,4 @@
-import { Bug } from "../mechanics/pieceTypes";
+import { Bugs } from "../mechanics/pieceTypes";
 
 export class Color {
 
@@ -56,13 +56,13 @@ export class Color {
 
 }
 
-Color.bugs[Bug.Q] = "#DBB600";
-Color.bugs[Bug.A] = "#0078D9";
-Color.bugs[Bug.G] = "#007F0E";
-Color.bugs[Bug.L] = "#FF0000";
-Color.bugs[Bug.M] = "#A0A0A0";
-Color.bugs[Bug.S] = "#5E3C33";
-Color.bugs[Bug.B] = "#B200FF";
+Color.bugs[Bugs.QUEEN] = "#DBB600";
+Color.bugs[Bugs.ANT] = "#0078D9";
+Color.bugs[Bugs.HOPPER] = "#007F0E";
+Color.bugs[Bugs.LADY] = "#FF0000";
+Color.bugs[Bugs.MOSQUITO] = "#A0A0A0";
+Color.bugs[Bugs.SPIDER] = "#5E3C33";
+Color.bugs[Bugs.BEETLE] = "#B200FF";
 
 // for (let p of Color.player) {
 // 	p.selected = new Color(p.main).lighten(p.light).hex;;
