@@ -73,7 +73,7 @@ export function evaluateDepth(board: Board, depth: number): number {
     let min = board.currentPlayer === 0 ? -10000 : 10000;
     moves.forEach(move => {
         const newBoard = board.clone();
-        Moves.make(newBoard, move);
+        newBoard.applyMove(move);
         let v = evaluateDepth(newBoard, depth - 1);
         if (board.currentPlayer === 0) {
             min = Math.max(min, v);
@@ -90,7 +90,7 @@ export function getBestMove(board: Board, depth: number): Move {
     let minMove: Move | undefined;
     moves.forEach(move => {
         const newBoard = board.clone();
-        Moves.make(newBoard, move);
+        newBoard.applyMove(move);
         let v = evaluateDepth(newBoard, depth - 1);
         if (board.currentPlayer === 0) {
             if (v > min) {
@@ -116,7 +116,7 @@ export function evaluateDepthSparse(board: Board, max: number, depth: number): n
 
     const sortMoves = moves.map(move => {
         const newBoard = board.clone();
-        Moves.make(newBoard, move);
+        newBoard.applyMove(move);
         let v = evaluate(newBoard);
         return {move: move, board: newBoard, value: v};
     });
@@ -137,7 +137,7 @@ export function evaluateDepthSparse(board: Board, max: number, depth: number): n
             min = Math.min(min, v);
         }
     });
-    return min;
+    return min * .99;
 }
 
 export function getBestMoveSparse(board: Board, max: number, depth: number): Move {
