@@ -4,7 +4,7 @@ import { Bugs } from "./pieceTypes";
 import { Piece } from "../state/piece";
 import { Slot } from "../state/slot";
 import { Env } from "../state/env";
-import { getBestMove } from "../ai/evaluator";
+import { getBestMove, getBestMoveSparse } from "../ai/evaluator";
 import { PieceMoves } from "./pieceMoves";
 
 export class Move {
@@ -65,7 +65,8 @@ export class Moves {
 			} else if (human) {
 				console.log(this.getAllMoves(board));
 				console.log("AI Moving");
-				this.make(board, getBestMove(board, 2));
+				this.make(board, getBestMoveSparse(board, 5, 4));
+				//this.make(board, getBestMove(board, 3));
 			}
 
 			return true;
