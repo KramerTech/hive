@@ -3,7 +3,7 @@ import { Board } from "../state/board";
 import { Bugs } from "../mechanics/pieceTypes";
 import { Vec } from "../vec";
 
-export function evaluate(board: Board) {
+export function evaluate(board: Board, verbose: boolean = false) {
     const surroundPenalty = 1;
     const possiblePenalty = .1;
 
@@ -52,14 +52,17 @@ export function evaluate(board: Board) {
         });
     } else {
     }
+    if (verbose) {
+        console.log(wOpen, bOpen, board.currentPlayer, score);
+    }
     if (wOpen === 0 && bOpen === 0) {
         return 0;
     }
     if (wOpen === 0) {
-        return -1000;
+        return -10000;
     }
     if (bOpen === 0) {
-        return 1000;
+        return 10000;
     }
 
     return score;
@@ -85,7 +88,11 @@ export function evaluateDepth(board: Board, depth: number): number {
 }
 
 export function getBestMove(board: Board, depth: number): Move {
-    const moves = Moves.getAllMoves(board);
+    let moves = Moves.getAllMoves(board);
+    if (moves.length === 0) {
+        board.nextTurn();
+        moves = Moves.getAllMoves(board);
+    }
     let min = board.currentPlayer === 0 ? -10000 : 10000;
     let minMove: Move | undefined;
     moves.forEach(move => {
@@ -111,8 +118,12 @@ export function evaluateDepthSparse(board: Board, max: number, depth: number): n
     if (depth === 0) {
         return evaluate(board);
     }
-    const moves = Moves.getAllMoves(board);
-    let min = board.currentPlayer === 0 ? -10000 : 10000;
+    let moves = Moves.getAllMoves(board);
+    if (moves.length === 0) {
+        board.nextTurn();
+        moves = Moves.getAllMoves(board);
+    }
+    let min = board.currentPlayer === 0 ? -100000 : 100000;
 
     const sortMoves = moves.map(move => {
         const newBoard = board.clone();
@@ -142,26 +153,24 @@ export function evaluateDepthSparse(board: Board, max: number, depth: number): n
 
 export function getBestMoveSparse(board: Board, max: number, depth: number): Move {
     const moves = Moves.getAllMoves(board);
-    let min = board.currentPlayer === 0 ? -10000 : 10000;
-    let minMove: Move | undefined;
 
     moves.sort(() => Math.random() - .5);
 
-    moves.forEach(move => {
+    const topMoves = moves.map(move => {
         const newBoard = board.clone();
         newBoard.applyMove(move);
-        let v = evaluateDepthSparse(newBoard, max, depth - 1);
-        if (board.currentPlayer === 0) {
-            if (v > min) {
-                min = v;
-                minMove = move;
-            }
-        } else {
-            if (v < min) {
-                min = v;
-                minMove = move;
-            }
+        let v1 = evaluate(newBoard);
+        if (v1 < -500 || v1 > 500) {
+            return {move: move, value: v1};
         }
+        let v = evaluateDepthSparse(newBoard, max, depth - 1);
+        return {move: move, value: v};
     });
-    return minMove as Move;
+
+    topMoves.sort((a, b) => a.value - b.value);
+    if (board.currentPlayer === 0) {
+        topMoves.reverse();
+    }
+    console.log(topMoves);
+    return topMoves[0].move as Move;
 }
