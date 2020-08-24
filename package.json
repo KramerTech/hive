@@ -12,7 +12,10 @@
 	"devDependencies": {
 		"@types/node": "^10.12.18",
 		"@types/ws": "^6.0.1",
+		"concurrently": "^5.1.0",
 		"cssnano": "^4.1.10",
+		"parcel": "^1.12.4",
+		"reload": "^3.0.4",
 		"typescript": "^3.2.4"
 	},
 	"dependencies": {
