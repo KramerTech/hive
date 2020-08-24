@@ -17,6 +17,7 @@
 	},
 	"dependencies": {
 		"pure-rand": "^1.6.2",
+		"toastify-js": "^1.9.1",
 		"ws": "^7.0.0"
 	}
 }

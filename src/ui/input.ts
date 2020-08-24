@@ -1,10 +1,8 @@
 import { Move, Moves } from "../mechanics/moves";
-import { Board } from "../state/board";
 import { Env } from "../state/env";
 import { Piece } from "../state/piece";
 import { Vec } from "../vec";
 import { Util } from "../util";
-import { Bugs } from "../mechanics/pieceTypes";
 import { PieceMoves } from "../mechanics/pieceMoves";
 
 export class Input {
@@ -18,9 +16,7 @@ export class Input {
 
 	private pickCycle = 0;
 
-	constructor(
-		public board: Board,
-	) {
+	constructor() {
 		window.addEventListener("mousedown", this.down.bind(this));
 		window.addEventListener("mouseup", this.up.bind(this));
 		window.addEventListener("wheel", this.wheel.bind(this));
@@ -39,7 +35,7 @@ export class Input {
 	}
 
 	private up(event: MouseEvent) {
-		// let tile = this.board.get(Env.hex);
+		// let tile = Env.board.get(Env.hex);
 		if (event.button === 0) {
 			if (!this.dragFlag) {
 				this.dragFlag = true;
@@ -52,6 +48,7 @@ export class Input {
 	}
 
 	private wheel(event: MouseWheelEvent) {
+		if (Env.board.turn === 0) { return; }
 		Env.zoom(event.deltaY > 0);
 	}
 		
@@ -61,16 +58,17 @@ export class Input {
 		if (Env.movingTile) {
 			Input.moveDelta.set(Env.world).sub(Env.movingTile.cart).sub(Env.dragStart);
 		} else if (this.mouseDown) {
+			if (Env.board.turn === 0) { return; }
 			Env.slide.add(event.movementX, event.movementY);
 		}
 		this.dragFlag = true;
 	}
 
 	private rightClick() {
-		if (this.mouseDown) { return; }
+		if (this.mouseDown || !Env.myTurn() || !Env.gameStarted) { return; }
 
-		const pool = this.board.currentPool();
-		const bugs = pool.bugs(this.board.turn);
+		const pool = Env.board.currentPool();
+		const bugs = pool.bugs(Env.board.turn);
 		
 		if (!bugs.length) {
 			console.log("All of out pieces");
@@ -96,7 +94,7 @@ export class Input {
 
 	private dragPiece(piece: Piece, place?: boolean) {
 		if (place) {
-			Env.pieceMoves = Moves.getPlaceable(this.board).map(move => Util.axialToCartesian(move));
+			Env.pieceMoves = Moves.getPlaceable(Env.board).map(move => Util.axialToCartesian(move));
 			if (Env.movingTile) {
 				Env.movingTile.drag = false;
 			} else {
@@ -104,7 +102,7 @@ export class Input {
 				Input.moveDelta.set(Env.world).sub(piece.cart)
 			}
 		} else {
-			Env.pieceMoves = PieceMoves.get(this.board, piece).map(move => Util.axialToCartesian(move));
+			Env.pieceMoves = PieceMoves.get(Env.board, piece).map(move => Util.axialToCartesian(move));
 			Env.dragStart.set(Env.world).sub(piece.cart);
 		}
 		Env.movingTile = piece;
@@ -112,10 +110,12 @@ export class Input {
 	}
 	
 	private pickup(): boolean {
-		let piece = this.board.get(Env.hex);
+		if (!Env.myTurn()) { return false; }
+		
+		let piece = Env.board.get(Env.hex);
 
 		if (Env.movingTile) { return true; }
-		if (!piece || (Env.validate && piece.player !== this.board.currentPlayer)) { return false; }
+		if (!piece || (Env.validate && piece.player !== Env.board.currentPlayer)) { return false; }
 
 		this.dragPiece(piece as Piece);
 		return true;
@@ -131,9 +131,9 @@ export class Input {
 			src,
 		);
 		if (Env.validate) {
-			Moves.make(this.board, move, true);
+			Env.makeMove(Env.board, move);
 		} else {
-			this.board.applyMove(move);
+			Env.board.applyMove(move);
 		}
 	} finally {
 		this.reset();

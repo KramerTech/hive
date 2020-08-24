@@ -1,7 +1,7 @@
-import { Moves, Move } from "../mechanics/moves";
-import { Board } from "../state/board";
-import { Bugs } from "../mechanics/pieceTypes";
-import { Vec } from "../vec";
+import { Moves, Move } from "../../src/mechanics/moves";
+import { Board } from "../../src/state/board";
+import { Bugs } from "../../src/mechanics/pieceTypes";
+import { Vec } from "../../src/vec";
 
 export function evaluate(board: Board, verbose: boolean = false) {
     const surroundPenalty = 1;

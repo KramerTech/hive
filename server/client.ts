@@ -1,7 +1,6 @@
-import { Moves } from "../src/state/moves";
 import * as WebSocket from "ws";
 
-export type ClientMessage = {client: Client, type: "turn" | "move" | "close", data?: any};
+export type ClientMessage = {client: Client, type: string, data?: any};
 export type Receiver = (m: ClientMessage) => void;
 
 export class Client {
@@ -10,7 +9,6 @@ export class Client {
 
 	public id = Client.UUID++;
 	public playerNumber!: number;
-	public turn = false;
 	public receiver!: Receiver;
 	
 	constructor(private socket: WebSocket) {
@@ -19,35 +17,32 @@ export class Client {
 				client: this,
 				type: "close",
 			});
-			// console.log(code, reason);
 		});
 		socket.on("message", data => {
 			let message = JSON.parse(data.toString());
-			if (!message.type) { console.error("No type!"); return; }
-			this.receiver({
-				client: this,
-				type: message.type,
-				data: message.data
-			});
+			if (message.type && message.data) {
+				this.receiver({
+					client: this,
+					type: message.type,
+					data: message.data
+				});
+			}
 		});
 	}
 
-	sendTurn(moveSets: Moves[]) { 
-		console.log(moveSets);
-		this.socket.send("Hi Friend");
-	}
-
-	init(player: number, players: number) {
-		this.socket.send(JSON.stringify({
-			"type": "init",
-			"player": player,
-			"players": players,
-		}));
+	static package(type: string, data?: any): string {
+		return JSON.stringify({
+			type: type,
+			data: data,
+		});
 	}
 
 	sendPacket(packet: string) {
 		this.socket.send(packet);
 	}
 
+	sendMessage(type: string, data?: any) {
+		this.sendPacket(Client.package(type, data));
+	}
 
 }

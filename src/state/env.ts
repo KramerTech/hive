@@ -2,6 +2,8 @@ import { Vec } from "../vec";
 import { Util } from "../util";
 import { Piece } from "./piece";
 import { Var } from "./var";
+import { Board } from "./board";
+import { Moves } from "../mechanics/moves";
 
 export class Env {
 
@@ -26,6 +28,16 @@ export class Env {
 
 	public static slide = new Vec();
 	private static slideTarget = new Vec();
+
+	public static player: number;
+	public static opponent: string;
+	public static board: Board;
+
+	static makeMove: typeof Moves.make;
+
+	static myTurn() {
+		return this.board.myTurn(this.player);
+	}
 
 	static zoom(out: boolean) {
 		this.scaleTarget *= (out ? 1 / Var.SCALE_SPEED : Var.SCALE_SPEED);

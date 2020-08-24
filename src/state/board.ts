@@ -29,7 +29,6 @@ export class Board {
 		this.size = this.players * PiecePool.TOTAL;
 
 		if (clone) { return; }
-		(window as any)["board"] = this;
 
 		this.ORDER = [
 			1 - this.size,
@@ -233,6 +232,10 @@ export class Board {
 
 	public beeDown(player = this.currentPlayer) {
 		return this.bees[player];
+	}
+
+	public myTurn(player: number) {
+		return this.currentPlayer === player;
 	}
 
 	has(axial: Vec): boolean {

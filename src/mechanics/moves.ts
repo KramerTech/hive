@@ -3,7 +3,6 @@ import { Piece } from "../state/piece";
 import { Vec } from "../vec";
 import { PieceMoves } from "./pieceMoves";
 import { Bugs } from "./pieceTypes";
-import { getBestMoveSparse } from "../ai/evaluator";
 
 export class Move {
 	constructor(
@@ -18,8 +17,10 @@ export class Moves {
 
 	static FIRST_MOVE = [new Vec()];
 
-	static make(board: Board, move: Move, human?: boolean): boolean {
-		if (move.player !== board.currentPlayer) { return false; }
+	static make(board: Board, move: Move): boolean {
+		if (move.player !== board.currentPlayer || board.winner !== undefined) {
+			return false;
+		}
 		
 		// Sanity check
 		let piece: Piece | undefined;
@@ -43,25 +44,19 @@ export class Moves {
 		}
 
 		if (this.moveValid(move, valids)) {
-			if (board.applyMove(move)) {
-				console.log("Game Over", board.winner);
-				return true;
-			};
-			
-			// TODO: cache allmoves to avoid double work for evaluator
+			board.applyMove(move);
 			const allMoves = this.getAllMoves(board);
-
 			if (allMoves.length === 0) {
-				console.log("No moves for", board.currentPlayer ? "black" : "white");
 				board.nextTurn();
-			} else if (human) {
-				// console.log(this.getAllMoves(board));
-				console.log("AI Moving");
-				this.make(board, getBestMoveSparse(board, 5, 4));
-				//this.make(board, getBestMove(board, 3));
 			}
-
 			return true;
+			
+			// if (human) {
+			// 	// console.log(this.getAllMoves(board));
+			// 	console.log("AI Moving");
+			// 	this.make(board, getBestMoveSparse(board, 5, 4));
+			// 	//this.make(board, getBestMove(board, 3));
+			// }
 		} else {
 			console.log("Invalid", move.src ? "move" : "placement");
 		}
@@ -106,8 +101,10 @@ export class Moves {
 	 */
 	static getPlaceable(board: Board, player = board.currentPlayer): Vec[] {
 		if (board.turn === 0) {
+			// First move is always at 0, 0
 			return Moves.FIRST_MOVE;
 		} else if (board.turn === 1) {
+			// Second move must touch opponent piece
 			return Piece.ORDER;
 		}
 
@@ -132,6 +129,11 @@ export class Moves {
 		return Array.from(moves.values());
 	}
 
-}
+	static makeRandomMove(board: Board): Move {
+		const moves = this.getAllMoves(board);
+		const move = moves[Math.floor(Math.random() * moves.length)];
+		board.applyMove(move);
+		return move;
+	}
 
-(window as any).moves = Moves;
+}

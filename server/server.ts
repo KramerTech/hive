@@ -1,8 +1,9 @@
 import { Server } from "ws";
-import { Match } from "../src/state/match";
 import { Client, ClientMessage } from "./client";
-import { MoveDesc } from "../src/state/moves";
 import { Var } from "../src/state/var";
+import { Board } from "../src/state/board";
+import { Move, Moves } from "../src/mechanics/moves";
+import { Vec } from "../src/vec";
 
 export class Manager {
 
@@ -10,7 +11,7 @@ export class Manager {
 	pending?: ServerMatch;
 
 	connect(client: Client) {
-		if (!this.pending) { this.pending = new ServerMatch(3); }
+		if (!this.pending) { this.pending = new ServerMatch(2); }
 
 		let match = this.pending;
 		match.addPlayer(client);
@@ -25,68 +26,71 @@ export class Manager {
 }
 export class ServerMatch {
 
-	private timeoutIdx!: number;
-	private timeout!: number;
+	private timeout!: NodeJS.Timeout;
 	
 	private started = false;
-	private seed: number = Math.floor(Math.random() * Number.MAX_SAFE_INTEGER);
 
-	private players: Client[] = [];
+	private clients: Client[] = [];
 	private replaceable: number[] = [];
 
-	private match: Match;
-
-	private turnComplete: boolean[];
-	private turnCompleteCounter = 0;
+	private board: Board;
 
 	constructor(private requiredPlayers: number) {
-		this.turnComplete = new Array(requiredPlayers);
-		this.turnComplete.fill(false);	
-
-		this.match = new Match(this.seed, requiredPlayers);
-		console.log(this.seed);
+		this.board = new Board(2);
 	}
 
 	ready() {
-		return this.players.length - this.replaceable.length === this.requiredPlayers;
+		return this.clients.length - this.replaceable.length === this.requiredPlayers;
 	}
 
 	addPlayer(client: Client) {
-		let pn = this.players.length
+		let pn = this.clients.length
 
 		if (this.replaceable.length) {
 			pn = this.replaceable.splice(this.replaceable.length - 1)[0];
-			this.players[pn] = client;
+			this.clients[pn] = client;
 		} else {
-			this.players.push(client);
+			this.clients.push(client);
 		}
 
 		console.log("Player Added");
 		client.playerNumber = pn;
 		client.receiver = this.handler.bind(this);
-		client.init(pn, this.requiredPlayers);
+		client.sendMessage("init", pn);
 		this.broadcast("waiting", {
-			count: this.players.length - this.replaceable.length
+			count: this.clients.length - this.replaceable.length
 		});
 	}
 
-	broadcast(type: string, data: any) {
-		data.type = type;
-		let packet = JSON.stringify(data);
-		this.players.forEach(c => { c.sendPacket(packet); });
+	broadcast(type: string, data?: any, except?: Client) {
+		// Do it once to save on stringifications and object inits
+		let packet = Client.package(type, data);
+		this.clients.forEach(c => {
+			if (except !== c) {
+				c.sendPacket(packet);
+			}
+		});
 	}
 
 	handler(message: ClientMessage) {
 		switch(message.type) {
 		case "close":
 			this.playerLeft(message.client);
-			break;
-		case "turn":
-			this.turn(message.client.playerNumber);
-			break;
+		break;
 		case "move":
 			this.move(message);
-			break;
+		break;
+		case "chat":
+			this.chat(message);
+		break;
+		}
+	}
+
+	chat(m: ClientMessage) {
+		if (m.data && m.data.length <= 60) {
+			this.broadcast("chat", m.data, m.client);
+		} else {
+			m.client.sendMessage("chat", "INVALID MESSAGE");
 		}
 	}
 
@@ -100,76 +104,52 @@ export class ServerMatch {
 	}
 
 	move(m: ClientMessage) {
-		// Stop the haxurz
-		m.data.player = m.client.playerNumber;
-
-		let move = MoveDesc.restore(m.data);
-		let failed = this.match.move(move);
-		if (failed) {
-			console.error("MOVE FAILED: ", move);
-		}
-	}
-
-	turn(player: number) {
-		if (this.turnComplete[player]) {
-			console.error("Player ended turn twice");
+		if (!this.started) {
+			console.log("Bad move - match not started");
 			return;
 		}
 
-		console.log("Player " + player + " is ending his turn.");
-		this.turnComplete[player] = true;
-		this.turnCompleteCounter++;
+		try {
+			const move: Move = new Move(
+				m.client.playerNumber, // Stop the haxurz
+				// Doing it this way eliminates anything extra the player might have sent
+				m.data.bug,
+				Vec.fromData(m.data.dest) as Vec,
+				Vec.fromData(m.data.src),
+			);
 
-		if (this.turnCompleteCounter < this.players.length) {
-			this.broadcast("waiting", {count: this.turnCompleteCounter})
-			return;
+			if (move.bug && move.dest && Moves.make(this.board, move)) {
+				this.broadcast("move", move, m.client);
+				this.setTimer();
+			} else {
+				throw new Error("Invalid Move: " + JSON.stringify(m));
+			}
+		} catch (e) {
+			console.log(e);
 		}
-
-		// Do turn stuff
-		this.turnComplete.fill(false);
-		this.turnCompleteCounter = 0;
-
-		let moves: MoveDesc[][] = [];
-		this.match.forGames(game => {
-			moves.push(game.moves.marshal());
-		});
-		
-		this.setTimer();
-		this.match.nextTurn();
-		this.broadcast("turn", {
-			moves: moves,
-			timeout: this.timeout
-		});
+	
 	}
 
 	start() {
 		this.started = true;
+		this.broadcast("start");
 		this.setTimer();
-		this.broadcast("start", {
-			seed: this.seed,
-			players: this.requiredPlayers,
-			timeout: this.timeout
-		});
 	}
 
 	setTimer() {
-		if (this.timeoutIdx) { clearTimeout(this.timeoutIdx); }
-		
-		let end = new Date();
-		end.setSeconds(end.getSeconds() + Var.SECONDS_PER_TURN);
-		this.timeout = end.getTime();
-		console.log("Set timer for " + this.timeout);
-
-		this.timeoutIdx = <any> setTimeout(() => {
-			//TODO: race condition check
-			this.players.forEach(c => this.turn(c.playerNumber));
-		}, Var.SECONDS_PER_TURN * 1000);
+		if (this.timeout) { clearTimeout(this.timeout); }
+		if (this.board.winner !== null) {
+			this.timeout = setTimeout(() => {
+				this.broadcast("move", Moves.makeRandomMove(this.board));
+			}, Var.SECONDS_PER_TURN * 1000);
+		}
 	}
 
 }
 
 
-const wss = new Server({port: 8888});
-let manager = new Manager();
+const wss = new Server({port: Var.PORT});
+const manager = new Manager();
 wss.on("connection", client => manager.connect(new Client(<any> client)));
+
 console.log("Server Online");

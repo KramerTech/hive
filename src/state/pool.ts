@@ -1,6 +1,7 @@
 import { Bugs } from "../mechanics/pieceTypes";
 import { Piece } from "./piece";
 import { Vec } from "../vec";
+import { Var } from "./var";
 
 const ALLOC: {[key: string]: number} = {};
 ALLOC[Bugs.QUEEN] = 1;
@@ -57,7 +58,7 @@ export class PiecePool {
 		const bugs: Bugs[] = [];
 		
 		// The bee must be placed by the 4th move
-		if (Math.floor(turn / 2) === 3 && this.has(Bugs.QUEEN)) { return [Bugs.QUEEN]; }
+		if (Math.floor(turn / 2) >= Var.BEE_DOWN_BY - 1 && this.has(Bugs.QUEEN)) { return [Bugs.QUEEN]; }
 
 		for (const bug in this.pools) {
 			if (this.pools[bug].length > 0) {

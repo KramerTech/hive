@@ -14,43 +14,20 @@ canvas {
 	height: 100vh !important;
 }
 
-.info-box {
-	pointer-events: none;
-	position: absolute;
-	top: 0; 
-	color: white;
-	background-color: rgba(0, 0, 0, 0.7);
-	padding: 10px;
+#chat {
+	position: fixed;
+	z-index: 1;
+	top: 15px;
+	right: 15px;
+	resize: none;
+	padding: 8px;
+	border-radius: 6px;
+}
+
+.toastify {
+	border: 1px solid white;
+	border-radius: 6px !important;
+	font-family: Arial, Helvetica, sans-serif;
 	text-align: center;
-	font-family: monospace;
-}
-
-#info {
-	right: 0;
-	border-radius: 0 0 0 10px;
-}
-
-#upkeep {
-	left: 0;
-	border-radius: 0 0 10px 0;
-}
-
-#upkeep table tr td:last-child {
-	text-align: right;
-}
-
-#upkeep table {
-	text-align: left;
-}
-
-#splotch {
-	/* background-color: red; */
-	margin: auto;
-	width: 60%;
-	padding-top: 60%;
-}
-
-#timer {
-	font-family: 'Courier New', Courier, monospace;
-	font-size: 1.4em;
+	overflow: hidden;
 }

@@ -1,8 +1,6 @@
-import { Board } from "../state/board";
 import { Env } from "../state/env";
 import { Piece } from "../state/piece";
 import { Var } from "../state/var";
-import { Vec } from "../vec";
 import { Draw } from "./draw";
 import { Input } from "./input";
 import { Polygon } from "./polygons";
@@ -16,9 +14,7 @@ export class Graphics {
 	private lastTime = 0;
 	private boundTick = this.tick.bind(this);
 
-	constructor(
-		public board: Board
-	) {
+	constructor() {
 		window.addEventListener("resize", this.resize.bind(this));
 		document.addEventListener('contextmenu', e => e.preventDefault());
 
@@ -69,7 +65,7 @@ export class Graphics {
 		g.translate(Env.slide.x, Env.slide.y);
 		g.scale(Env.scale, Env.scale);
 
-		this.board.forEachBottom(tile => {
+		Env.board.forEachBottom(tile => {
 			if (tile !== Env.movingTile) {
 				this.drawTile(g, tile);
 			}
@@ -125,7 +121,7 @@ export class Graphics {
 		g.lineWidth = Var.PIECE_STROKE;
 		const canHover = piece.drag || piece.axial.equals(Env.hex) && !Env.movingTile;
 		do {
-			const hover = canHover && !piece.parent && (!Env.validate || piece.player === this.board.currentPlayer);
+			const hover = canHover && !piece.parent && (!Env.validate || piece.player === Env.board.currentPlayer);
 
 			g.save();
 			Draw.piece(piece, g, hover, piece.parent === undefined);
