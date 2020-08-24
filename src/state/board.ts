@@ -172,7 +172,7 @@ export class Board {
 	}
 
     public getPiecesByType(bug: Bugs, player: number) {
-        let pieces = [];
+        let pieces: Piece[] = [];
         for (const piece of this.pieces) {
 			if (piece.bug === bug && piece.player === player) {
 				pieces.push(piece);

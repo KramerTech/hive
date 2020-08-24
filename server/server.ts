@@ -147,9 +147,11 @@ export class ServerMatch {
 
 }
 
+let port = Var.PORT;
+if (process.argv[2] && !isNaN(+process.argv[2])) { port = +process.argv[2]; }
+const wss = new Server({port: port});
 
-const wss = new Server({port: Var.PORT});
 const manager = new Manager();
 wss.on("connection", client => manager.connect(new Client(<any> client)));
 
-console.log("Server Online");
+console.log("Server Online :" + port);

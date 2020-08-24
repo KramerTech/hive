@@ -63,8 +63,8 @@ export class Vec {
 	static rotate(vec: Vec, rad: number): Vec { return vec.clone().rotate(rad); }
 
 	static fromData(vec: any): Vec | undefined {
-		if (!vec || isNaN(vec.x) || isNaN(vec.y)) { return; }
-		return new Vec(vec.x, vec.y);
+		if (!vec || isNaN(+vec.x) || isNaN(+vec.y)) { return; }
+		return new Vec(+vec.x, +vec.y);
 	}
 
 	clone(): Vec { return new Vec(this.x, this.y); }

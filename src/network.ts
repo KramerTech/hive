@@ -48,14 +48,14 @@ export class Network {
 		return false;
 	}
 
-	private static connect(url: string, port: number, secure: boolean) {
+	private static connect(url: string) {
 		Env.gameStarted = false;
 		Env.board = new Board(2);
 		Env.turnRotation = 0;
 
-		console.log(url, port);
+		console.log(url);
 		Toasts.show("Attempting to connect to game server...");
-		this.ws = new WebSocket(`ws${secure ? 's' : ''}://` + url + ":" + port);
+		this.ws = new WebSocket(url);
 
 		this.ws.onopen = ev => {
 			console.log(ev);
@@ -125,11 +125,21 @@ export class Network {
 	}
 
 	static start() {
-		let conn = new URLSearchParams(window.location.search);
-		let url = conn.get("url") || "skramer.dev";
-		let port = +(conn.get("port") || Var.PORT);
-		let secure = conn.get("insecure") === null;
-		this.boundReconnect = this.connect.bind(this, url, port, secure);
+		let args = new URLSearchParams(window.location.search);
+		let url = window.location.href;
+
+		let override = args.get("url");
+		if (override) {
+			url = override;
+		} else if (url.includes("localhost")) {
+			url = "ws:" + url.split(":")[1] + ":" + Var.PORT;
+		} else {
+			url = url.replace("https://", "wss://");
+			url = url.replace("http://", "ws://");
+			if (!url.endsWith("/")) { url += "/"; }
+			url += "ws";
+		}
+		this.boundReconnect = this.connect.bind(this, url);
 		this.boundReconnect();
 	}
 

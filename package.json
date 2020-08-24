@@ -5,7 +5,7 @@
 	],
 	"scripts": {
 		"start": "concurrently --kill-others \"parcel watch index.html --no-hmr\" \"reload -b -d dist\"",
-		"build": "rm -fr www && mkdir www && parcel build --no-source-maps -d www index.html",
+		"build": "rm -fr www && mkdir www && parcel build --no-source-maps -d www --public-url /hive index.html",
 		"deps": "npm i && npm i -g concurrently parcel-bundler reload",
 		"server": "ts-node-dev server/server.ts"
 	},
