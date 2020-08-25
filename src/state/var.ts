@@ -6,7 +6,7 @@ export class Var {
 	public static PORT = 7273;
 	public static BEE_DOWN_BY = 4;
 
-	public static SECONDS_PER_TURN = 5;
+	public static SECONDS_PER_TURN = 120;
 
 	public static STACK_OFF = Vec.mult(Util.HEX_UP, -0.16);
 
