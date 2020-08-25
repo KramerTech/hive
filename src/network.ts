@@ -5,7 +5,6 @@ import { Var } from "./state/var";
 import { Vec } from "./vec";
 import { Toasts } from "./toasts";
 import { Countdown } from "./ui/countdown";
-import { ENOBUFS } from "constants";
 
 export class Network {
 
