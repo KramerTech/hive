@@ -129,11 +129,13 @@ export class Moves {
 		return Array.from(moves.values());
 	}
 
-	static makeRandomMove(board: Board): Move {
+	static makeRandomMove(board: Board): Move | undefined {
 		const moves = this.getAllMoves(board);
-		const move = moves[Math.floor(Math.random() * moves.length)];
-		board.applyMove(move);
-		return move;
+		if (moves.length) {
+			const move = moves[Math.floor(Math.random() * moves.length)];
+			this.make(board, move);
+			return move;
+		}
 	}
 
 }

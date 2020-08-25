@@ -29,7 +29,7 @@ export class Toasts {
 		if (this.chatEnabled) {
 			const chat = Toastify({
 				text: text,
-				duration: 15000,
+				duration: 90000,
 				offset: {y: 50},
 				onClick: () => chat.hideToast(),
 				backgroundColor: me ? "#356D38" : "#BC4B00",

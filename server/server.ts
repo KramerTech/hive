@@ -137,7 +137,7 @@ export class ServerMatch {
 				this.broadcast("move", move, m.client);
 				this.setTimer();
 			} else {
-				throw new Error("Invalid Move: " + JSON.stringify(m));
+				throw new Error("Invalid Move: " + JSON.stringify(m.data));
 			}
 		} catch (e) {
 			console.log(e);
@@ -154,12 +154,14 @@ export class ServerMatch {
 
 	setTimer() {
 		if (this.timeout) { clearTimeout(this.timeout); }
-		if (this.board.winner !== undefined) {
+		if (this.board.winner === undefined) {
 			this.timeout = setTimeout(() => {
-				if (this.board.winner !== undefined) {
-					this.broadcast("move", Moves.makeRandomMove(this.board));
+				if (this.board.winner === undefined) {
+					const move = Moves.makeRandomMove(this.board);
+					if (move) { this.broadcast("move", move); }
+					this.setTimer();
 				}
-			}, Var.SECONDS_PER_TURN * 1000);
+			}, (Var.SECONDS_PER_TURN + 1.2) * 1000);
 		}
 	}
 

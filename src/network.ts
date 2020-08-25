@@ -4,6 +4,8 @@ import { Board } from "./state/board";
 import { Var } from "./state/var";
 import { Vec } from "./vec";
 import { Toasts } from "./toasts";
+import { Countdown } from "./ui/countdown";
+import { ENOBUFS } from "constants";
 
 export class Network {
 
@@ -33,6 +35,8 @@ export class Network {
 				let toast: string;
 				if (board.winner === Env.player) {
 					toast = "You Won!";
+				} else if (Env.board.winner === -1) {
+					toast = "That's a draw!"
 				} else {
 					toast = "You lost. Better luck next time.";
 				}
@@ -43,6 +47,7 @@ export class Network {
 			} else {
 				Toasts.show("Move accepted. Please wait for your opponent to take their turn.");
 			}
+			Env.board.winner === undefined ? Countdown.start() : Countdown.reset();
 			return true;
 		}
 		return false;
@@ -81,12 +86,17 @@ export class Network {
 					clickCallback = this.boundReconnect
 					if (Env.board.winner === Env.player) {
 						toast = "You Won!";
+					} else if (Env.board.winner === -1) {
+						toast = "That's a draw!"
 					} else {
 						toast = "You lost. Better luck next time.";
 					}
 					toast += " Click to play again";
 				} else if (move.player === Env.player) {
-					toast = "You took too long to move, so a random move was made for you. Now it's your opponent's turn.";
+					toast = "You took too long to move, so a random move was made for you.";
+					if (Env.board.currentPlayer !== Env.player) {
+						toast += " Now it's your opponent's turn.";
+					}
 				} else if (Env.board.currentPlayer !== Env.player) {
 					toast = "You have no available moves, so your opponent will move again.";
 				} else {
@@ -97,6 +107,7 @@ export class Network {
 						toast += "Your bee must be placed by the fourth turn, so do that now.";
 					}
 				}
+				Env.board.winner === undefined ? Countdown.start() : Countdown.reset();
 			break;
 			case "init":
 				Env.player = +payload.data;
@@ -109,11 +120,17 @@ export class Network {
 					toast = "Game started. You go second. Please wait while your opponent makes the first move."
 				}
 				Env.gameStarted = true;
+				Countdown.start();
 			break;
 			case "close":
-				toast = "You opponent just disconnected. I guess that means you win! Click to play again.";
+				toast = "You opponent just disconnected.";
+				if (Env.board.winner === undefined) {
+					Env.board.winner = Env.player;
+					toast += "I guess that means you win!";
+				}
+				toast += "Click to play again.";
 				clickCallback = this.boundReconnect;
-				Env.board.winner = Env.player;
+				Countdown.reset();
 			break;
 			case "chat":
 				Toasts.chat(payload.data, false);
@@ -159,9 +176,8 @@ chatWindow.onkeyup = (event) => {
 	if (event.keyCode === 13) {
 		if (chatWindow.value.trim().length) {
 			Network.chat(chatWindow.value);
-			chatWindow.value = "";
 		}
-		return false;
+		chatWindow.value = "";
 	}
 	return true;
 };
