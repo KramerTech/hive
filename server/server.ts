@@ -7,25 +7,28 @@ import { Vec } from "../src/vec";
 
 export class Manager {
 
-	games: ServerMatch[] = [];
 	pending?: ServerMatch;
 
 	connect(client: Client) {
-		if (!this.pending) { this.pending = new ServerMatch(2); }
+		if (!this.pending) {
+			this.pending = new ServerMatch(2);
+		}
 
 		let match = this.pending;
 		match.addPlayer(client);
 		if (match.ready()) {
-			this.games.push(match);
 			delete this.pending;
 			match.start();
-			console.log("Match Started");
 		}
 	}
 
 }
 export class ServerMatch {
 
+	static matches: { [UUID: string]: ServerMatch } = {};
+	static UUID = 0;
+
+	private id = ++ServerMatch.UUID;
 	private timeout!: NodeJS.Timeout;
 	
 	private started = false;
@@ -37,6 +40,8 @@ export class ServerMatch {
 
 	constructor(private requiredPlayers: number) {
 		this.board = new Board(2);
+		ServerMatch.matches[this.id] = this;
+		console.log(`Lobby ${this.id} created, ${Object.keys(ServerMatch.matches).length} total.`);
 	}
 
 	ready() {
@@ -53,13 +58,14 @@ export class ServerMatch {
 			this.clients.push(client);
 		}
 
-		console.log("Player Added");
+		const playerCount = this.clients.length - this.replaceable.length
+		console.log(`Player added to lobby ${this.id}. (${playerCount} / ${this.requiredPlayers})`);
+
 		client.playerNumber = pn;
 		client.receiver = this.handler.bind(this);
+
 		client.sendMessage("init", pn);
-		this.broadcast("waiting", {
-			count: this.clients.length - this.replaceable.length
-		});
+		this.broadcast("waiting", playerCount);
 	}
 
 	broadcast(type: string, data?: any, except?: Client) {
@@ -97,7 +103,16 @@ export class ServerMatch {
 	playerLeft(client: Client) {
 		console.log("Player Removed");
 		if (this.started) {
-			// TODO: tell everybody
+			this.clients.splice(this.clients.indexOf(client), 1);
+			this.broadcast("close", client.playerNumber);
+
+			if (this.clients.length === 0) {
+				// All players have left the game
+				delete ServerMatch.matches[this.id];
+				console.log(`Lobby ${this.id} destroyed, ${Object.keys(ServerMatch.matches).length} total.`);
+			} else {
+				this.board.winner = this.clients[0].playerNumber;
+			}
 		} else {
 			this.replaceable.push(client.playerNumber);
 		}
@@ -134,13 +149,16 @@ export class ServerMatch {
 		this.started = true;
 		this.broadcast("start");
 		this.setTimer();
+		console.log(`Match ${this.id} Started`);
 	}
 
 	setTimer() {
 		if (this.timeout) { clearTimeout(this.timeout); }
-		if (this.board.winner !== null) {
+		if (this.board.winner !== undefined) {
 			this.timeout = setTimeout(() => {
-				this.broadcast("move", Moves.makeRandomMove(this.board));
+				if (this.board.winner !== undefined) {
+					this.broadcast("move", Moves.makeRandomMove(this.board));
+				}
 			}, Var.SECONDS_PER_TURN * 1000);
 		}
 	}

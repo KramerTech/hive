@@ -49,6 +49,8 @@ export class Network {
 	}
 
 	private static connect(url: string) {
+		if (this.ws) { this.ws.close(); }
+
 		Env.gameStarted = false;
 		Env.board = new Board(2);
 		Env.turnRotation = 0;
@@ -107,6 +109,11 @@ export class Network {
 					toast = "Game started. You go second. Please wait while your opponent makes the first move."
 				}
 				Env.gameStarted = true;
+			break;
+			case "close":
+				toast = "You opponent just disconnected. I guess that means you win! Click to play again.";
+				clickCallback = this.boundReconnect;
+				Env.board.winner = Env.player;
 			break;
 			case "chat":
 				Toasts.chat(payload.data, false);

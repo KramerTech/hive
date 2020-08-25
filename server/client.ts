@@ -17,15 +17,22 @@ export class Client {
 				client: this,
 				type: "close",
 			});
+			socket.close();
 		});
 		socket.on("message", data => {
-			let message = JSON.parse(data.toString());
-			if (message.type && message.data) {
-				this.receiver({
-					client: this,
-					type: message.type,
-					data: message.data
-				});
+			try {
+				let message = JSON.parse(data.toString());
+				if (message.type && message.data) {
+					// This is a protected keyword for the server
+					if (message.type === "close") { return; }
+					this.receiver({
+						client: this,
+						type: message.type,
+						data: message.data
+					});
+				}
+			} catch (error) {
+				console.log(error);
 			}
 		});
 	}
