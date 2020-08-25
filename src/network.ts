@@ -125,9 +125,9 @@ export class Network {
 				toast = "You opponent just disconnected.";
 				if (Env.board.winner === undefined) {
 					Env.board.winner = Env.player;
-					toast += "I guess that means you win!";
+					toast += " I guess that means you win!";
 				}
-				toast += "Click to play again.";
+				toast += " Click to play again.";
 				clickCallback = this.boundReconnect;
 				Countdown.reset();
 			break;
