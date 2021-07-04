@@ -26,7 +26,7 @@ export class Toasts {
 	}
 
 	static chat(text: string, me: boolean) {
-		if (this.chatEnabled) {
+		if (this.chatEnabled || me) {
 			const chat = Toastify({
 				text: text,
 				duration: 90000,

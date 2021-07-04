@@ -4,34 +4,55 @@ import { Piece } from "./piece";
 import { Var } from "./var";
 import { Board } from "./board";
 import { Moves } from "../mechanics/moves";
+import { Loopback } from "../rtc/client";
+import Peer from "peerjs";
 
 export class Env {
-
-	public static validate = true;
-
-	public static turnRotation = 0;
-	public static gameStarted = false;
-
-	public static movingTile?: Piece;
-	public static pieceMoves?: Vec[];
 	
-	public static hex = new Vec();
-	public static world = new Vec();
-	public static mouse = new Vec();
-	public static dragStart = new Vec();
+	// TODO: use this somehow?
+	static serverMode = false;
+
+	// Used for RTC games with no server
+	static hostURL: string;
+	static hostID: string;
+	static loopback: Loopback;
+	static peer: Peer;
+
+	static validate = true;
+
+	static turnRotation = 0;
+	static gameStarted = false;
+
+	static movingTile?: Piece;
+	static pieceMoves?: Vec[];
 	
-	public static scale = 30;
+	static hex = new Vec();
+	static world = new Vec();
+	static mouse = new Vec();
+	static dragStart = new Vec();
+	
+	static scale = 30;
 	
 	private static scaleTarget = Env.scale;
 	private static lastScaleTarget = Env.scale;
 	private static scalePerSecond = 0;
 
-	public static slide = new Vec();
+	static slide = new Vec();
 	private static slideTarget = new Vec();
 
-	public static player: number;
-	public static opponent: string;
-	public static board: Board;
+	static player: number;
+	static opponent: string;
+	static board: Board;
+
+	static setHost() {
+		this.hostID = this.peer!.id;
+		localStorage.setItem("host", this.hostID);
+
+		const url = new URL(window.location.href);
+		url.searchParams.set("peer", this.hostID);
+		this.hostURL = url.toString();
+		console.log(this.hostURL);
+	}
 
 	static makeMove: typeof Moves.make;
 
@@ -81,6 +102,10 @@ export class Env {
 		this.hex = Util.cartesianToAxial(this.world);
 	}
 
+}
+
+if (!Env.serverMode) {
+	Env.peer = new Peer({debug: 5});
 }
 
 (window as any).env = Env;

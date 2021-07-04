@@ -13,7 +13,6 @@ export class Countdown {
 	}
 
 	public static start() {
-		console.log("HI");
 		this.reset();
 		this.startTime = (new Date()).getTime();
 		this.timeout = setInterval(() => {

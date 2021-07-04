@@ -1,7 +1,9 @@
+import { Network } from "./network";
+import { Manager } from "./rtc/host";
 import { Board } from "./state/board";
+import { Env } from "./state/env";
 import { Graphics } from "./ui/graphics";
 import { Input } from "./ui/input";
-import { Network } from "./network";
 
 export class Main {
 
@@ -14,7 +16,17 @@ export class Main {
 	input!: Input;
 
 	constructor() {
-		this.network = new Network();
+		if (!Env.serverMode) {
+			const peer = new URLSearchParams(window.location.search).get("peer");
+			if (peer) {
+				Env.hostID = peer;
+			} else {
+				const manager = new Manager();
+				manager.host();
+			}
+		}
+
+		Network.start();
 		this.graphics = new Graphics();
 		this.input = new Input();
 	}

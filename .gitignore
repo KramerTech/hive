@@ -1,7 +1,7 @@
 .vscode
 .cache
 .build
+.parcel*
 dist
-www
 **/node_modules
 **/package-lock.json

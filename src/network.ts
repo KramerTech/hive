@@ -1,24 +1,28 @@
-import { Env } from "./state/env";
-import { Moves, Move } from "./mechanics/moves";
+import { Move, Moves } from "./mechanics/moves";
+import { ServerConnection } from "./rtc/client";
+import { PeerSocket } from "./rtc/peer";
 import { Board } from "./state/board";
+import { Env } from "./state/env";
 import { Var } from "./state/var";
-import { Vec } from "./vec";
 import { Toasts } from "./toasts";
 import { Countdown } from "./ui/countdown";
+import { Vec } from "./vec";
+import copy from "copy-to-clipboard";
 
 export class Network {
 
-	private static ws: WebSocket;
+	private static ni: ServerConnection;
 	private static init = false;
 	private static boundReconnect: any;
+	private static boundCopy: any;
 
 	public static endTurn() {
-		this.ws.send(JSON.stringify({type: "turn"}));
+		this.ni.send(JSON.stringify({type: "turn"}));
 	}
 
 	public static chat(text: string) {
 		Toasts.chat(text, true);
-		this.ws.send(JSON.stringify({
+		this.ni.send(JSON.stringify({
 			type: "chat",
 			data: text,
 		}));
@@ -26,7 +30,7 @@ export class Network {
 
 	public static move(board: Board, move: Move) {
 		if (Moves.make(board, move)) {
-			this.ws.send(JSON.stringify({
+			this.ni.send(JSON.stringify({
 				type: "move",
 				data: move
 			}));
@@ -53,21 +57,26 @@ export class Network {
 	}
 
 	private static connect(url: string) {
-		if (this.ws) { this.ws.close(); }
-
+		
 		Env.gameStarted = false;
 		Env.board = new Board(2);
 		Env.turnRotation = 0;
+		
+		// Loopback will only exist if we're hosting
+		if (Env.loopback) {
+			this.ni = Env.loopback;
+		} else {
+			// Else we need to make an actual connection
+			this.ni = Env.serverMode ? new WebSocket(url) : new PeerSocket(Env.hostID);
+		}
 
-		console.log(url);
 		Toasts.show("Attempting to connect to game server...");
-		this.ws = new WebSocket(url);
 
-		this.ws.onopen = ev => {
+		this.ni.onopen = ev => {
 			console.log(ev);
 		};
 
-		this.ws.onmessage = message => {
+		this.ni.onmessage = message => {
 			let payload = message.data;
 			if (!payload) { return; }
 
@@ -110,7 +119,12 @@ export class Network {
 			break;
 			case "init":
 				Env.player = +payload.data;
-				toast = "Connected to server. Waiting for an opponent to join.";
+				if (Env.loopback) {
+					toast = `You are currently hosting a lobby. Click here to copy your lobby link, then share it with your opponent.`;
+					clickCallback = this.boundCopy;
+				} else {
+					toast = "Connected to server. Waiting for an opponent to join.";
+				}
 			break;
 			case "start":
 				if (Env.player === 0) {
@@ -139,12 +153,21 @@ export class Network {
 			if (toast) { Toasts.show(toast, clickCallback); }
 		};
 
-		this.ws.onclose = event => {
-			const message = this.init ? "Connection to server lost." : "Could not connect to server.";
-			Toasts.show(message + " Click to retry.", this.boundReconnect);
+		this.ni.onclose = event => {
+			let message = this.init ? "Connection to server lost." : "Could not connect to server.";
+			message += " Click to retry.";
+			if (!this.init && !Env.loopback && !Env.serverMode) {
+				message += "<br>(You probably need to ask your opponent for a new link.)";
+			}
+			Toasts.show(message, this.boundReconnect);
 		}
 
 		Env.makeMove = this.move.bind(this);
+	}
+
+	static copy() {
+		copy(Env.hostURL);
+		Toasts.show("Link copied. Click here to copy again.", this.boundCopy);
 	}
 
 	static start() {
@@ -162,13 +185,12 @@ export class Network {
 			if (!url.endsWith("/")) { url += "/"; }
 			url += "ws";
 		}
+		this.boundCopy = this.copy.bind(this);
 		this.boundReconnect = this.connect.bind(this, url);
 		this.boundReconnect();
 	}
 
 }
-
-Network.start();
 
 const chatWindow = document.getElementById("chat") as HTMLTextAreaElement;
 chatWindow.onkeyup = (event) => {
