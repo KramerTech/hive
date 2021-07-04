@@ -105,7 +105,7 @@ export class Env {
 }
 
 if (!Env.serverMode) {
-	Env.peer = new Peer({debug: 5});
+	Env.peer = new Peer();
 }
 
 (window as any).env = Env;
