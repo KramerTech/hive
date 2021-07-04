@@ -13,12 +13,10 @@ export class Network {
 
 	private static ni: ServerConnection;
 	private static init = false;
-	private static boundReconnect: any;
-	private static boundCopy: any;
 
-	public static endTurn() {
-		this.ni.send(JSON.stringify({type: "turn"}));
-	}
+	private static boundReconnect: any;
+	private static boundRematch: any;
+	private static boundCopy: any;
 
 	public static chat(text: string) {
 		Toasts.chat(text, true);
@@ -44,7 +42,7 @@ export class Network {
 					toast = "You lost. Better luck next time.";
 				}
 				toast += " Click to play again.";
-				Toasts.show(toast, this.boundReconnect);
+				Toasts.show(toast, this.boundRematch);
 			} else if (Env.player === board.currentPlayer) {
 				Toasts.show("Your opponent does not have any moves, so you get to go again.");
 			} else {
@@ -56,11 +54,15 @@ export class Network {
 		return false;
 	}
 
-	private static connect(url: string) {
-		
+	private static reset() {
 		Env.gameStarted = false;
 		Env.board = new Board(2);
 		Env.turnRotation = 0;
+	}
+
+	private static connect(url: string) {
+		
+		this.reset();
 		
 		// Loopback will only exist if we're hosting
 		if (Env.loopback) {
@@ -91,7 +93,7 @@ export class Network {
 				move.dest = Vec.fromData(move.dest);
 				Moves.make(Env.board, move);
 				if (Env.board.winner !== undefined) {
-					clickCallback = this.boundReconnect
+					clickCallback = this.boundRematch
 					if (Env.board.winner === Env.player) {
 						toast = "You Won!";
 					} else if (Env.board.winner === -1) {
@@ -127,6 +129,10 @@ export class Network {
 				}
 			break;
 			case "start":
+				if (this.rematchWait) {
+					this.reset();
+					this.rematchWait = false;
+				}
 				if (Env.player === 0) {
 					toast = "Game started. Right click to scroll through pieces, then left click on a highlighted hex to place one.";
 				} else {
@@ -142,7 +148,7 @@ export class Network {
 					toast += " I guess that means you win!";
 				}
 				toast += " Click to play again.";
-				clickCallback = this.boundReconnect;
+				clickCallback = this.boundRematch;
 				Countdown.reset();
 			break;
 			case "chat":
@@ -163,6 +169,13 @@ export class Network {
 		}
 
 		Env.makeMove = this.move.bind(this);
+	}
+
+	private static rematchWait = false;
+	static rematch() {
+		this.rematchWait = true;
+		Toasts.show("Waiting for opponent to accept...");
+		this.ni.send(JSON.stringify({type: "rematch", data: true}));
 	}
 
 	static copy() {
@@ -186,6 +199,7 @@ export class Network {
 			url += "ws";
 		}
 		this.boundCopy = this.copy.bind(this);
+		this.boundRematch = this.rematch.bind(this);
 		this.boundReconnect = this.connect.bind(this, url);
 		this.boundReconnect();
 	}

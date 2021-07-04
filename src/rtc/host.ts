@@ -47,11 +47,12 @@ export class ServerMatch {
 
 	private clients: Client[] = [];
 	private replaceable: number[] = [];
+	private rematch: Set<number> = new Set();
 
 	private board: Board;
 
 	constructor(private requiredPlayers = 2) {
-		this.board = new Board(2);
+		this.board = new Board(requiredPlayers);
 		ServerMatch.matches[this.id] = this;
 		console.log(`Lobby ${this.id} created, ${Object.keys(ServerMatch.matches).length} total.`);
 	}
@@ -98,9 +99,26 @@ export class ServerMatch {
 		case "move":
 			this.move(message);
 		break;
+		case "rematch":
+			this.requestRematch(message);
+		break;
 		case "chat":
 			this.chat(message);
 		break;
+		}
+	}
+
+	requestRematch(m: ClientMessage) {
+		console.log("Rematch requested");
+
+		// Can't rematch while still playing
+		if (this.board.winner === undefined) { return; }
+		
+		this.rematch.add(m.client.id);
+		if (this.rematch.size === this.requiredPlayers) {
+			this.rematch = new Set();
+			this.board = new Board(this.requiredPlayers);
+			this.start();
 		}
 	}
 
